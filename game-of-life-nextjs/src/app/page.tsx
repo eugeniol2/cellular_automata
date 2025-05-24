@@ -1,103 +1,91 @@
-import Image from "next/image";
+"use client";
+
+import React from "react";
+import { useGameOfLife } from "./hooks/useGameOfLife";
+import Grid from "@/components/grid";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [numRows, setNumRows] = React.useState(30);
+  const [numCols, setNumCols] = React.useState(50);
+  const { grid, running, start, stop, reset, toggleCell } = useGameOfLife(
+    numRows,
+    numCols
+  );
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const handleRowsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNumRows(Math.max(5, Math.min(100, Number(e.target.value))));
+  };
+  const handleColsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNumCols(Math.max(5, Math.min(100, Number(e.target.value))));
+  };
+
+  React.useEffect(() => {
+    reset();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [numRows, numCols]);
+
+  return (
+    <main className="flex min-h-screen flex-col items-center justify-center p-12 bg-gray-950 text-white">
+      <h1 className="text-4xl font-bold mb-8">Conway&apos;s Game of Life</h1>
+      <div className="mb-6 flex space-x-4">
+        <div className="flex items-center space-x-2">
+          <label htmlFor="rows" className="text-sm">
+            Rows:
+          </label>
+          <input
+            id="rows"
+            type="number"
+            min={5}
+            max={100}
+            value={numRows}
+            onChange={handleRowsChange}
+            disabled={running}
+            className="w-16 px-2 py-1 rounded bg-gray-800 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+        <div className="flex items-center space-x-2">
+          <label htmlFor="cols" className="text-sm">
+            Cols:
+          </label>
+          <input
+            id="cols"
+            type="number"
+            min={5}
+            max={100}
+            value={numCols}
+            onChange={handleColsChange}
+            disabled={running}
+            className="w-16 px-2 py-1 rounded bg-gray-800 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+        </div>
+        <button
+          onClick={running ? stop : start}
+          className={`px-4 py-2 rounded font-semibold transition-colors duration-200 ${
+            running
+              ? "bg-red-600 hover:bg-red-700 text-white"
+              : "bg-green-600 hover:bg-green-700 text-white"
+          }`}
         >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+          {running ? "Stop" : "Start"}
+        </button>
+        <button
+          onClick={reset}
+          disabled={running}
+          className="px-4 py-2 rounded font-semibold bg-gray-600 hover:bg-gray-700 text-white transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+          Reset / Randomize
+        </button>
+      </div>
+      <Grid
+        grid={grid}
+        toggleCell={toggleCell}
+        numRows={numRows}
+        numCols={numCols}
+      />
+      <p className="mt-8 text-sm text-gray-400">
+        Click on cells to toggle their state (alive/dead) when the simulation is
+        stopped.
+      </p>
+    </main>
   );
 }
