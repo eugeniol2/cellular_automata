@@ -5,9 +5,19 @@ interface GridProps {
   toggleCell: (row: number, col: number) => void;
   numRows: number;
   numCols: number;
+  isRaining: boolean;
 }
 
-const Grid: React.FC<GridProps> = ({ grid, toggleCell, numRows, numCols }) => {
+const COLOR_ALIVE_NORMAL = "rgb(34 197 94)";
+const COLOR_ALIVE_RAINING = "rgb(59 130 246)";
+
+const Grid: React.FC<GridProps> = ({
+  grid,
+  toggleCell,
+  numRows,
+  numCols,
+  isRaining,
+}) => {
   const cellSize = 20;
 
   return (
@@ -25,7 +35,11 @@ const Grid: React.FC<GridProps> = ({ grid, toggleCell, numRows, numCols }) => {
             onClick={() => toggleCell(i, k)}
             className={`w-[${cellSize}px] h-[${cellSize}px] border border-gray-800 cursor-pointer`}
             style={{
-              backgroundColor: colState ? "rgb(34 197 94)" : "rgb(17 24 39)",
+              backgroundColor: colState
+                ? isRaining
+                  ? COLOR_ALIVE_RAINING
+                  : COLOR_ALIVE_NORMAL
+                : "rgb(17, 24, 39)",
             }}
           />
         ))

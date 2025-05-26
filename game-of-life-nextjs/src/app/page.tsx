@@ -1,16 +1,15 @@
 "use client";
 
 import React from "react";
-import { useGameOfLife } from "./hooks/useGameOfLife";
+
 import Grid from "@/components/grid";
+import { useSimulation } from "./hooks/useSimulation";
 
 export default function Home() {
   const [numRows, setNumRows] = React.useState(30);
   const [numCols, setNumCols] = React.useState(50);
-  const { grid, running, start, stop, reset, toggleCell } = useGameOfLife(
-    numRows,
-    numCols
-  );
+  const { grid, running, isRaining, start, stop, reset, toggleCell } =
+    useSimulation(numRows, numCols);
 
   const handleRowsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setNumRows(Math.max(5, Math.min(100, Number(e.target.value))));
@@ -81,6 +80,7 @@ export default function Home() {
         toggleCell={toggleCell}
         numRows={numRows}
         numCols={numCols}
+        isRaining={isRaining}
       />
       <p className="mt-8 text-sm text-gray-400">
         Click on cells to toggle their state (alive/dead) when the simulation is
