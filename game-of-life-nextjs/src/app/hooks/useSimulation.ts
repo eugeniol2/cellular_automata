@@ -1,38 +1,24 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { createRandomGrid } from "../utils/functions";
+import { createRandomGrid, createEmptyGrid } from "../utils/functions";
+import { Agent, createAgent, GENOME_LENGTH } from "../agents/agent";
+import { highLifeStep, Grid as CA_Grid } from "../utils/caRules";
 
-const GENOME_LENGTH = 512;
 const MUTATION_RATE = 0.01;
 const GA_INTERVAL = 100;
 const POPULATION_TARGET = 50;
+const SHELTER_DURATION = 10;
 
-export interface Agent {
-  id: number;
-  row: number;
-  col: number;
-  state: "normal" | "sheltered";
-  color: string;
-  fitness: number;
-  prediction: boolean;
-  genome: number[];
-}
-
-const createEmptyGrid = (numRows: number, numCols: number): number[][] => {
-  const rows = [];
-  for (let i = 0; i < numRows; i++) {
-    rows.push(Array(numCols).fill(0));
-  }
-  return rows;
-};
-
-const createRandomGenome = (): number[] => {
-  return Array.from({ length: GENOME_LENGTH }, () => Math.round(Math.random()));
-};
+export type CARuleStepFn = (
+  prevGrid: CA_Grid,
+  numRows: number,
+  numCols: number
+) => CA_Grid;
 
 export const useSimulation = (
   numRows: number,
   numCols: number,
-  initialAgentCount: number = POPULATION_TARGET
+  initialAgentCount: number = POPULATION_TARGET,
+  caRuleStepFn: CARuleStepFn = highLifeStep
 ) => {
   const [grid, setGrid] = useState<number[][]>(() =>
     createEmptyGrid(numRows, numCols)
@@ -44,6 +30,8 @@ export const useSimulation = (
   const runningRef = useRef(running);
   runningRef.current = running;
   const [simulationStep, setSimulationStep] = useState(0);
+  const simulationStepRef = useRef(simulationStep);
+  simulationStepRef.current = simulationStep;
   const [isMounted, setIsMounted] = useState(false);
 
   const [isRaining, setIsRaining] = useState(false);
@@ -51,21 +39,16 @@ export const useSimulation = (
   const [agents, setAgents] = useState<Agent[]>([]);
   const nextAgentId = useRef(initialAgentCount);
 
+  const [generation, setGeneration] = useState(1);
+  const generationRef = useRef(generation);
+  generationRef.current = generation;
+
   useEffect(() => {
     setGrid(createRandomGrid(numRows, numCols));
     setAgents(() => {
       const initialAgents: Agent[] = [];
       for (let i = 0; i < initialAgentCount; i++) {
-        initialAgents.push({
-          id: i,
-          row: Math.floor(Math.random() * numRows),
-          col: Math.floor(Math.random() * numCols),
-          state: "normal",
-          color: "#22c55e",
-          fitness: 0,
-          prediction: false,
-          genome: createRandomGenome(),
-        });
+        initialAgents.push(createAgent(i, numRows, numCols));
       }
       nextAgentId.current = initialAgentCount;
       return initialAgents;
@@ -89,11 +72,13 @@ export const useSimulation = (
         col: Math.floor(Math.random() * numCols),
         fitness: 0,
         state: "normal",
-        color: "#22c55e",
+        color: "#fff",
         prediction: false,
+        shelterTimer: 0,
+        cooldownTimer: 0,
       });
     }
-    const tournamentSize = 3;
+    const tournamentSize = 5;
     while (newGeneration.length < POPULATION_TARGET) {
       const selectParent = (): Agent => {
         let best: Agent | null = null;
@@ -121,10 +106,12 @@ export const useSimulation = (
         row: Math.floor(Math.random() * numRows),
         col: Math.floor(Math.random() * numCols),
         state: "normal",
-        color: "#22c55e",
+        color: "#fff",
         fitness: 0,
         prediction: false,
         genome: mutatedGenome,
+        shelterTimer: 0,
+        cooldownTimer: 0,
       });
     }
     return newGeneration.slice(0, POPULATION_TARGET);
@@ -134,9 +121,11 @@ export const useSimulation = (
     if (!runningRef.current || !isMounted) {
       return;
     }
-
-    const currentStep = simulationStep + 1;
-    setSimulationStep(currentStep);
+    setSimulationStep((prev) => {
+      const next = prev + 1;
+      simulationStepRef.current = next;
+      return next;
+    });
 
     let blockCountForRainCheck = 0;
     const currentGrid = gridRef.current;
@@ -185,6 +174,17 @@ export const useSimulation = (
     setAgents((prevAgents) => {
       const processedAgents = prevAgents
         .map((agent) => {
+          if (agent.state === "sheltered") {
+            agent.shelterTimer -= 1;
+            if (agent.shelterTimer <= 0) {
+              agent.state = "normal";
+              agent.color = "#fff";
+              agent.cooldownTimer = SHELTER_DURATION * 2;
+            }
+          } else if (agent.cooldownTimer && agent.cooldownTimer > 0) {
+            agent.cooldownTimer -= 1;
+          }
+
           let perceptionIndex = 0;
           let powerOfTwo = 1;
           for (let x = -1; x <= 1; x++) {
@@ -197,15 +197,23 @@ export const useSimulation = (
               powerOfTwo *= 2;
             }
           }
+
           const agentPredictsRain = agent.genome[perceptionIndex] === 1;
           agent.prediction = agentPredictsRain;
-          if (agentPredictsRain) {
+
+          if (
+            agentPredictsRain &&
+            agent.state === "normal" &&
+            agent.shelterTimer === 0 &&
+            (!agent.cooldownTimer || agent.cooldownTimer <= 0)
+          ) {
             agent.state = "sheltered";
-            agent.color = "#3b82f6";
-          } else {
-            agent.state = "normal";
-            agent.color = "#22c55e";
+            agent.color = "orange";
+            agent.shelterTimer = SHELTER_DURATION;
+          } else if (!agentPredictsRain && agent.state === "normal") {
+            agent.color = "#fff";
           }
+
           if (currentRainStatus && agent.state !== "sheltered") {
             return null;
           } else {
@@ -215,16 +223,24 @@ export const useSimulation = (
         })
         .filter((agent) => agent !== null) as Agent[];
 
+      if (processedAgents.length === 0) {
+        const newAgents: Agent[] = [];
+        for (let i = 0; i < POPULATION_TARGET; i++) {
+          newAgents.push(createAgent(nextAgentId.current++, numRows, numCols));
+        }
+        return newAgents;
+      }
+
       const movedAgents = processedAgents.map((agent) => {
         const dx = Math.floor(Math.random() * 3) - 1;
         const dy = Math.floor(Math.random() * 3) - 1;
-        if (dx === 0 && dy === 0) {
-          return agent;
-        }
+        if (dx === 0 && dy === 0) return agent;
+
         const newRow = agent.row + dx;
         const newCol = agent.col + dy;
         const wrappedNewRow = (newRow + numRows) % numRows;
         const wrappedNewCol = (newCol + numCols) % numCols;
+
         if (currentGrid[wrappedNewRow]?.[wrappedNewCol] === 0) {
           const occupied = processedAgents.some(
             (other) =>
@@ -240,46 +256,23 @@ export const useSimulation = (
         return agent;
       });
 
-      if (currentStep % GA_INTERVAL === 0) {
+      const nextStep = simulationStepRef.current;
+      if (nextStep % GA_INTERVAL === 0) {
+        if (generationRef.current === generation) {
+          const nextGen = generation + 1;
+          generationRef.current = nextGen;
+          setGeneration(nextGen);
+        }
         return runGeneticAlgorithm(movedAgents);
       } else {
         return movedAgents;
       }
     });
 
-    setGrid((prevGrid) => {
-      if (!prevGrid || prevGrid.length === 0) return [];
-      const nextGrid = Array(numRows)
-        .fill(0)
-        .map((_, i) =>
-          Array(numCols)
-            .fill(0)
-            .map((__, j) => {
-              let liveNeighbors = 0;
-              const neighborCoords = [
-                [-1, -1],
-                [-1, 0],
-                [-1, 1],
-                [0, -1],
-                [0, 1],
-                [1, -1],
-                [1, 0],
-                [1, 1],
-              ];
-              neighborCoords.forEach(([x, y]) => {
-                const wrappedI = (i + x + numRows) % numRows;
-                const wrappedJ = (j + y + numCols) % numCols;
-                liveNeighbors += prevGrid[wrappedI]?.[wrappedJ] || 0;
-              });
-              if (liveNeighbors < 2 || liveNeighbors > 3) return 0;
-              else if (prevGrid[i]?.[j] === 0 && liveNeighbors === 3) return 1;
-              else return prevGrid[i]?.[j] || 0;
-            })
-        );
-      return nextGrid;
-    });
+    setGrid((prevGrid) => caRuleStepFn(prevGrid, numRows, numCols));
 
     setTimeout(runSimulationStep, 100);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [numRows, numCols, isMounted, simulationStep]);
 
   const start = () => {
@@ -304,16 +297,7 @@ export const useSimulation = (
     setAgents(() => {
       const initialAgents: Agent[] = [];
       for (let i = 0; i < initialAgentCount; i++) {
-        initialAgents.push({
-          id: i,
-          row: Math.floor(Math.random() * numRows),
-          col: Math.floor(Math.random() * numCols),
-          state: "normal",
-          color: "#22c55e",
-          fitness: 0,
-          prediction: false,
-          genome: createRandomGenome(),
-        });
+        initialAgents.push(createAgent(i, numRows, numCols));
       }
       nextAgentId.current = initialAgentCount;
       return initialAgents;
@@ -338,6 +322,7 @@ export const useSimulation = (
     running,
     isRaining,
     simulationStep,
+    generation,
     start,
     stop,
     reset,

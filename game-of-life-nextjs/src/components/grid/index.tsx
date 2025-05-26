@@ -1,4 +1,4 @@
-import { Agent } from "@/app/hooks/useSimulation";
+import { Agent } from "@/app/agents/agent";
 import React from "react";
 
 interface GridProps {
