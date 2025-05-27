@@ -163,7 +163,7 @@ export default function Home() {
         numRows={numRows}
         numCols={numCols}
         isRaining={isRaining}
-        agents={agents}
+        agents={agentsEnabled ? agents : []}
       />
       <p className="mt-10 text-lg text-gray-300">
         Click on cells to toggle their state (alive/dead) when the simulation is
