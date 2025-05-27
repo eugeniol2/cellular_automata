@@ -7,11 +7,10 @@ interface GridProps {
   toggleCell: (row: number, col: number) => void;
   numRows: number;
   numCols: number;
-  isRaining: boolean; // Keep isRaining prop
+  isRaining: boolean;
   cellSize?: number;
 }
 
-// Define colors for clarity
 const COLOR_DEAD = "rgb(17 24 39)"; // gray-900
 const COLOR_ALIVE_NORMAL = "rgb(34 197 94)"; // green-500
 const COLOR_ALIVE_RAINING = "rgb(59 130 246)"; // blue-500
@@ -22,8 +21,8 @@ const Grid: React.FC<GridProps> = ({
   toggleCell,
   numRows,
   numCols,
-  isRaining, // Destructure isRaining prop
-  cellSize = 15, // Revert to default or previous working size
+  isRaining,
+  cellSize = 15,
 }) => {
   return (
     <div
@@ -35,10 +34,8 @@ const Grid: React.FC<GridProps> = ({
         height: `${numRows * cellSize}px`,
       }}
     >
-      {/* Render CA background cells */}
       {grid.map((rows, i) =>
         rows.map((cellState, k) => {
-          // Determine background color based on cell state and rain status
           let backgroundColor = COLOR_DEAD;
           if (cellState === 1) {
             backgroundColor = isRaining
@@ -61,7 +58,6 @@ const Grid: React.FC<GridProps> = ({
         })
       )}
 
-      {/* Render Agents on top as separate elements */}
       {agents.map((agent) => (
         <div
           key={`agent-${agent.id}`}
@@ -71,7 +67,7 @@ const Grid: React.FC<GridProps> = ({
             height: `${cellSize * 0.8}px`,
             top: `${agent.row * cellSize + cellSize * 0.1}px`,
             left: `${agent.col * cellSize + cellSize * 0.1}px`,
-            backgroundColor: agent.color, // Agent color (green or blue)
+            backgroundColor: agent.color,
             zIndex: 10,
           }}
           title={`Agent ${agent.id}`}

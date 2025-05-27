@@ -54,7 +54,7 @@ export const useSimulation = (
       return initialAgents;
     });
     setIsMounted(true);
-  }, [numRows, numCols, initialAgentCount]);
+  }, [numRows, numCols, initialAgentCount, caRuleStepFn]);
 
   const runGeneticAlgorithm = (currentAgents: Agent[]): Agent[] => {
     if (currentAgents.length === 0) return [];
@@ -273,7 +273,7 @@ export const useSimulation = (
 
     setTimeout(runSimulationStep, 100);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [numRows, numCols, isMounted, simulationStep]);
+  }, [numRows, numCols, isMounted, simulationStep, caRuleStepFn]);
 
   const start = () => {
     if (!isMounted) return;
@@ -318,16 +318,14 @@ export const useSimulation = (
 
   return {
     grid,
-    agents,
     running,
-    isRaining,
     simulationStep,
+    isRaining,
+    agents,
     generation,
     start,
     stop,
     reset,
     toggleCell,
-    numRows,
-    numCols,
   };
 };
