@@ -13,7 +13,10 @@ export interface Agent {
 export const GENOME_LENGTH = 101;
 
 export function createRandomGenome(): number[] {
-  return Array.from({ length: GENOME_LENGTH }, () => Math.round(Math.random()));
+  return Array.from(
+    { length: GENOME_LENGTH },
+    () => Math.random() * 0.5 + 0.25
+  );
 }
 
 export function createAgent(

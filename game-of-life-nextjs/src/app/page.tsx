@@ -25,7 +25,7 @@ export default function Home() {
     start,
     stop,
     reset,
-    toggleCell,
+
     simulationStep,
     generation,
     extinctionCount,
@@ -59,7 +59,6 @@ export default function Home() {
         Simulação de Epidemia com Autómatos Celulares e AG
       </h1>
 
-      {/* --- PAINEL DE CONTROLO --- */}
       <div className="mb-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-4">
         <div className="flex items-center space-x-2">
           <label htmlFor="ca-rule">Regra do AC:</label>
@@ -78,7 +77,6 @@ export default function Home() {
           </select>
         </div>
 
-        {/* CORREÇÃO APLICADA AQUI */}
         <div className="flex items-center space-x-2">
           <label htmlFor="rows">Linhas:</label>
           <input
@@ -105,7 +103,6 @@ export default function Home() {
             className="w-20 px-2 py-1 rounded bg-gray-800 border border-gray-600"
           />
         </div>
-        {/* FIM DA CORREÇÃO */}
 
         <div className="flex items-center space-x-2">
           <label htmlFor="agent-count">População:</label>
@@ -139,7 +136,6 @@ export default function Home() {
         </button>
       </div>
 
-      {/* --- PAINEL DE ESTATÍSTICAS --- */}
       <div className="w-full max-w-6xl bg-gray-900 p-4 rounded-lg border border-gray-700 mb-6 grid grid-cols-3 gap-4 text-lg">
         <div>
           Passo da Simulação:
@@ -184,14 +180,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* --- GRELHA DE SIMULAÇÃO --- */}
-      <Grid
-        grid={grid}
-        toggleCell={toggleCell}
-        numRows={numRows}
-        numCols={numCols}
-        agents={agents}
-      />
+      <Grid grid={grid} numRows={numRows} numCols={numCols} agents={agents} />
       <p className="mt-6 text-gray-400">
         Clique nas células da grelha para as ativar/desativar (apenas quando a
         simulação está parada).

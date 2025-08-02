@@ -1,17 +1,17 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { createRandomGrid, createEmptyGrid } from "../utils/functions";
-import { Agent, createAgent, GENOME_LENGTH } from "../agents/agent";
+import { Agent, createAgent } from "../agents/agent";
 import { highLifeStep, Grid as CA_Grid } from "../utils/caRules";
 import { calculateBoxCountingDimension } from "../utils/analysis";
 import {
-  handleExtinction,
   moveAgents,
+  processDeathAndReproduction,
   processInfection,
   updateAgentStates,
 } from "./methods";
 
-const MUTATION_RATE = 0.05;
-const GA_INTERVAL = 100;
+const DEATH_RATE = 0.001;
+const ANALYSIS_INTERVAL = 10;
 const POPULATION_TARGET = 150;
 const INFECTION_DURATION = 20;
 
@@ -73,63 +73,6 @@ export const useSimulation = (
     setIsMounted(true);
   }, [numRows, numCols, initialAgentCount]);
 
-  const runGeneticAlgorithm = useCallback(
-    (currentAgents: Agent[]): Agent[] => {
-      if (currentAgents.length === 0) return [];
-      const newGeneration: Agent[] = [];
-      const sortedAgents = [...currentAgents].sort(
-        (a, b) => b.fitness - a.fitness
-      );
-      const eliteCount = Math.max(1, Math.floor(sortedAgents.length * 0.1));
-
-      for (let i = 0; i < eliteCount; i++) {
-        newGeneration.push(
-          createAgent(
-            nextAgentId.current++,
-            numRows,
-            numCols,
-            sortedAgents[i].genome
-          )
-        );
-      }
-
-      const tournamentSize = 5;
-      while (newGeneration.length < POPULATION_TARGET) {
-        const selectParent = (): Agent => {
-          let best: Agent | null = null;
-          for (let i = 0; i < tournamentSize; i++) {
-            const randomIndex = Math.floor(Math.random() * sortedAgents.length);
-            const contender = sortedAgents[randomIndex];
-            if (!best || contender.fitness > best.fitness) {
-              best = contender;
-            }
-          }
-          return best!;
-        };
-        const parent1 = selectParent();
-        const parent2 = selectParent();
-        const crossoverPoint = Math.floor(Math.random() * GENOME_LENGTH);
-        const childGenome = [
-          ...parent1.genome.slice(0, crossoverPoint),
-          ...parent2.genome.slice(crossoverPoint),
-        ];
-
-        const mutatedGenome = childGenome.map((gene) => {
-          if (Math.random() < MUTATION_RATE) {
-            const mutationAmount = (Math.random() - 0.5) * 0.1;
-            return Math.max(0, Math.min(1, gene + mutationAmount));
-          }
-          return gene;
-        });
-        newGeneration.push(
-          createAgent(nextAgentId.current++, numRows, numCols, mutatedGenome)
-        );
-      }
-      return newGeneration.slice(0, POPULATION_TARGET);
-    },
-    [numRows, numCols]
-  );
-
   const runSimulationStep = useCallback(() => {
     if (!runningRef.current || !isMounted) return;
 
@@ -137,21 +80,20 @@ export const useSimulation = (
       const nextGrid = caRuleStepFn(prevGrid, numRows, numCols);
 
       setAgents((prevAgents) => {
-        const newlyInfected = processInfection(prevAgents);
-        const processedAgents = updateAgentStates(prevAgents, newlyInfected);
-
-        const newPopulation = handleExtinction(
-          processedAgents,
+        const currentPopulation = processDeathAndReproduction(
+          prevAgents,
+          DEATH_RATE,
           POPULATION_TARGET,
           nextAgentId,
           numRows,
           numCols
         );
-        if (newPopulation) {
-          setExtinctionCount((c) => c + 1);
-          setGeneration(1);
-          return newPopulation;
-        }
+
+        const newlyInfected = processInfection(currentPopulation);
+        const processedAgents = updateAgentStates(
+          currentPopulation,
+          newlyInfected
+        );
 
         const movedAgents = moveAgents(
           processedAgents,
@@ -160,7 +102,8 @@ export const useSimulation = (
           numCols
         );
 
-        if ((simulationStepRef.current + 1) % GA_INTERVAL === 0) {
+        const currentStep = simulationStepRef.current;
+        if ((currentStep + 1) % ANALYSIS_INTERVAL === 0) {
           const avgFitness =
             movedAgents.reduce((sum, a) => sum + a.fitness, 0) /
             movedAgents.length;
@@ -171,9 +114,6 @@ export const useSimulation = (
             movedAgents
           );
           setDimensionHistory((hist) => [...hist, dimension]);
-
-          setGeneration((g) => g + 1);
-          return runGeneticAlgorithm(movedAgents);
         }
 
         return movedAgents;
@@ -183,8 +123,8 @@ export const useSimulation = (
     });
 
     setSimulationStep((prev) => prev + 1);
-    setTimeout(runSimulationStep, 300);
-  }, [isMounted, caRuleStepFn, numRows, numCols, runGeneticAlgorithm]);
+    setTimeout(runSimulationStep, 50);
+  }, [isMounted, caRuleStepFn, numRows, numCols]);
 
   const start = () => {
     if (!isMounted) return;
@@ -225,18 +165,6 @@ export const useSimulation = (
     setDimensionHistory([]);
   };
 
-  const toggleCell = (row: number, col: number) => {
-    if (running || !isMounted) return;
-    setGrid((g) => {
-      if (!g || g.length === 0) return [];
-      const newGrid = g.map((arr) => [...arr]);
-      if (newGrid[row] !== undefined && newGrid[row][col] !== undefined) {
-        newGrid[row][col] = g[row][col] ? 0 : 1;
-      }
-      return newGrid;
-    });
-  };
-
   return {
     grid,
     running,
@@ -249,6 +177,5 @@ export const useSimulation = (
     start,
     stop,
     reset,
-    toggleCell,
   };
 };

@@ -4,7 +4,6 @@ import React from "react";
 interface GridProps {
   grid: number[][];
   agents: Agent[];
-  toggleCell: (row: number, col: number) => void;
   numRows: number;
   numCols: number;
   cellSize?: number;
@@ -16,7 +15,6 @@ const COLOR_ALIVE = "rgb(55 65 81)";
 const Grid: React.FC<GridProps> = ({
   grid,
   agents,
-  toggleCell,
   numRows,
   numCols,
   cellSize = 12,
@@ -33,7 +31,6 @@ const Grid: React.FC<GridProps> = ({
         rows.map((cellState, k) => (
           <div
             key={`cell-${i}-${k}`}
-            onClick={() => toggleCell(i, k)}
             className="border-t border-l border-gray-800"
             style={{
               width: `${cellSize}px`,
