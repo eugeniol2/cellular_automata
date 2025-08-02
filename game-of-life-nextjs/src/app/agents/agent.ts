@@ -2,7 +2,7 @@ export interface Agent {
   id: number;
   row: number;
   col: number;
-  state: "suscetivel" | "infetado" | "recuperado";
+  state: "suscetivel" | "infected" | "recuperado";
   color: string;
   fitness: number;
   genome: number[];

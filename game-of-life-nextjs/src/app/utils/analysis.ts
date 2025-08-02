@@ -17,7 +17,7 @@ export function calculateBoxCountingDimension(
     .fill(0)
     .map(() => Array(numCols).fill(0));
   agents.forEach((agent) => {
-    if (agent.state === "infetado") {
+    if (agent.state === "infected") {
       infectedGrid[agent.row][agent.col] = 1;
     }
   });

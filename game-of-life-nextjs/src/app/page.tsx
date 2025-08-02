@@ -48,7 +48,7 @@ export default function Home() {
   const suscetiveisCount = agents.filter(
     (a) => a.state === "suscetivel"
   ).length;
-  const infetadosCount = agents.filter((a) => a.state === "infetado").length;
+  const infectedsCount = agents.filter((a) => a.state === "infected").length;
   const recuperadosCount = agents.filter(
     (a) => a.state === "recuperado"
   ).length;
@@ -156,7 +156,7 @@ export default function Home() {
           Suscetíveis: <span className="text-white">{suscetiveisCount}</span>
         </div>
         <div>
-          Infetados: <span className="text-red-500">{infetadosCount}</span>
+          infecteds: <span className="text-red-500">{infectedsCount}</span>
         </div>
         <div>
           Recuperados:

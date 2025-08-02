@@ -4,7 +4,7 @@ const NEIGHBOR_RADIUS = 2;
 const INFECTION_DURATION = 20;
 
 export function processInfection(agents: Agent[]): Set<number> {
-  const infected = agents.filter((a) => a.state === "infetado");
+  const infected = agents.filter((a) => a.state === "infected");
   const newlyInfected = new Set<number>();
 
   if (infected.length === 0) {
@@ -48,10 +48,10 @@ export function updateAgentStates(
       updatedAgent.state === "suscetivel" &&
       newlyInfected.has(updatedAgent.id)
     ) {
-      updatedAgent.state = "infetado";
+      updatedAgent.state = "infected";
       updatedAgent.color = "red";
       updatedAgent.infectionTimer = INFECTION_DURATION;
-    } else if (updatedAgent.state === "infetado") {
+    } else if (updatedAgent.state === "infected") {
       updatedAgent.infectionTimer -= 1;
       if (updatedAgent.infectionTimer <= 0) {
         updatedAgent.state = "recuperado";
@@ -106,7 +106,7 @@ export function handleExtinction(
   }
   for (let i = 0; i < 5; i++) {
     if (newAgents[i]) {
-      newAgents[i].state = "infetado";
+      newAgents[i].state = "infected";
       newAgents[i].color = "red";
       newAgents[i].infectionTimer = INFECTION_DURATION;
     }

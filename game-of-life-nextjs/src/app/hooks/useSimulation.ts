@@ -60,7 +60,7 @@ export const useSimulation = (
 
       for (let i = 0; i < 5; i++) {
         if (initialAgents[i]) {
-          initialAgents[i].state = "infetado";
+          initialAgents[i].state = "infected";
           initialAgents[i].color = "red";
           initialAgents[i].infectionTimer = INFECTION_DURATION;
         }
