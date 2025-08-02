@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { createRandomGrid, createEmptyGrid } from "../utils/functions";
 import { Agent, createAgent } from "../agents/agent";
-import { highLifeStep, Grid as CA_Grid } from "../utils/caRules";
+import { Grid as CA_Grid } from "../utils/caRules";
 import { calculateBoxCountingDimension } from "../utils/analysis";
 import {
   moveAgents,
@@ -16,17 +16,35 @@ export type CARuleStepFn = (
   numCols: number
 ) => CA_Grid;
 
-export const useSimulation = (
-  numRows: number,
-  numCols: number,
-  initialAgentCount: number = 150,
-  caRuleStepFn: CARuleStepFn = highLifeStep,
-  deathRate: number = 0.001,
-  analysisInterval: number = 10,
-  populationTarget: number = 150,
-  infectionDuration: number = 20,
-  infectionContagiousRange: number = 2
-) => {
+type UseSimulationProps = {
+  numRows: number;
+  numCols: number;
+  initialAgentCount: number;
+  caRuleStepFn: (
+    prevGrid: CA_Grid,
+    numRows: number,
+    numCols: number
+  ) => CA_Grid;
+  deathRate: number;
+  viralDeathRate: number;
+  analysisInterval: number;
+  populationTarget: number;
+  infectionDuration: number;
+  infectionContagiousRange: number;
+};
+
+export const useSimulation = ({
+  numRows,
+  numCols,
+  initialAgentCount,
+  caRuleStepFn,
+  deathRate,
+  analysisInterval,
+  populationTarget,
+  infectionDuration,
+  infectionContagiousRange,
+  viralDeathRate,
+}: UseSimulationProps) => {
   const [grid, setGrid] = useState<number[][]>(() =>
     createEmptyGrid(numRows, numCols)
   );
@@ -48,7 +66,6 @@ export const useSimulation = (
   const nextAgentId = useRef(initialAgentCount);
   const [generation, setGeneration] = useState(1);
 
-  const [extinctionCount, setExtinctionCount] = useState(0);
   const [avgFitnessHistory, setAvgFitnessHistory] = useState<number[]>([]);
   const [dimensionHistory, setDimensionHistory] = useState<number[]>([]);
 
@@ -87,6 +104,9 @@ export const useSimulation = (
           nextAgentIdRef: nextAgentId,
           numRows,
           numCols,
+          viralDeathRate,
+          simulationStep: simulationStepRef.current,
+          analysisInterval,
         });
 
         const newlyInfected = processInfection({
@@ -135,9 +155,10 @@ export const useSimulation = (
     numCols,
     deathRate,
     populationTarget,
+    viralDeathRate,
+    analysisInterval,
     infectionContagiousRange,
     infectionDuration,
-    analysisInterval,
   ]);
 
   const start = () => {
@@ -158,7 +179,6 @@ export const useSimulation = (
     stop();
     setGrid(createRandomGrid(numRows, numCols));
     setSimulationStep(0);
-    setExtinctionCount(0);
     setGeneration(1);
     setAgents(() => {
       const initialAgents: Agent[] = [];
@@ -184,7 +204,6 @@ export const useSimulation = (
     running,
     simulationStep,
     dimensionHistory,
-    extinctionCount,
     agents,
     generation,
     avgFitnessHistory,

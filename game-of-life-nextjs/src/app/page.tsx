@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Grid from "@/components/grid";
 import { useSimulation } from "./hooks/useSimulation";
 import { caRuleOptions } from "./utils/caRules";
@@ -8,16 +8,16 @@ import { caRuleOptions } from "./utils/caRules";
 const POPULATION_SIZE = 150;
 
 export default function Home() {
-  const [numRows, setNumRows] = React.useState(50);
-  const [numCols, setNumCols] = React.useState(80);
-  const [agentCount, setAgentCount] = React.useState(POPULATION_SIZE);
-  const [selectedRuleId, setSelectedRuleId] = React.useState(
-    caRuleOptions[0].id
-  );
-  const [deathRate, setDeathRate] = React.useState(0.001);
-  const [analysisInterval, setAnalysisInterval] = React.useState(10);
-  const [populationTarget, setPopulationTarget] = React.useState(150);
-  const [infectionDuration, setInfectionDuration] = React.useState(20);
+  const [numRows, setNumRows] = useState(50);
+  const [numCols, setNumCols] = useState(80);
+  const [agentCount, setAgentCount] = useState(POPULATION_SIZE);
+  const [selectedRuleId, setSelectedRuleId] = useState(caRuleOptions[0].id);
+  const [deathRate, setDeathRate] = useState(0.1);
+  const [viralDeathRate, setViralDeathRate] = useState(0.1);
+  const [infectionContagiousRange, setInfectionContagiousRange] = useState(2);
+  const [analysisInterval, setAnalysisInterval] = useState(10);
+  const [populationTarget, setPopulationTarget] = useState(150);
+  const [infectionDuration, setInfectionDuration] = useState(20);
   const selectedRule =
     caRuleOptions.find((r) => r.id === selectedRuleId) || caRuleOptions[0];
 
@@ -31,45 +31,54 @@ export default function Home() {
     simulationStep,
     avgFitnessHistory,
     dimensionHistory,
-  } = useSimulation(
+  } = useSimulation({
     numRows,
     numCols,
-    agentCount,
-    selectedRule.stepFn,
+    initialAgentCount: agentCount,
+    caRuleStepFn: selectedRule.stepFn,
     deathRate,
+    viralDeathRate,
     analysisInterval,
     populationTarget,
-    infectionDuration
-  );
+    infectionDuration,
+    infectionContagiousRange: infectionContagiousRange,
+  });
 
-  // Handlers for input changes
-  const handleRowsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setNumRows(Math.max(10, Math.min(100, Number(e.target.value))));
-  };
-  const handleColsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setNumCols(Math.max(10, Math.min(100, Number(e.target.value))));
-  };
-  const handleAgentCountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setAgentCount(Number(e.target.value) || 0);
-  };
+  const handleRowsChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+    setNumRows(Number(e.target.value));
+
+  const handleColsChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+    setNumCols(Number(e.target.value));
+
+  const handleAgentCountChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+    setAgentCount(Number(e.target.value));
+
   const handleDeathRateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setDeathRate(Math.max(0, Math.min(1, Number(e.target.value))));
+    const value = Math.min(100, Math.max(0, Number(e.target.value))) / 100;
+    setDeathRate(value);
   };
+
+  const handleViralDeathRateChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const value = Math.min(100, Math.max(0, Number(e.target.value)) / 100);
+    setViralDeathRate(value);
+  };
+
   const handleAnalysisIntervalChange = (
     e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setAnalysisInterval(Math.max(1, Math.min(100, Number(e.target.value))));
-  };
+  ) => setAnalysisInterval(Number(e.target.value));
+
   const handlePopulationTargetChange = (
     e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setPopulationTarget(Math.max(10, Math.min(500, Number(e.target.value))));
-  };
+  ) => setPopulationTarget(Number(e.target.value));
+
   const handleInfectionDurationChange = (
     e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setInfectionDuration(Number(e.target.value) || 0);
-  };
+  ) => setInfectionDuration(Number(e.target.value));
+
+  const handleInfectionRangeChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+    setInfectionContagiousRange(Number(e.target.value));
 
   // Count agent states
   const suscetiveisCount = agents.filter(
@@ -89,24 +98,8 @@ export default function Home() {
       {/* Control Panel Container */}
       <div className="w-full max-w-6xl bg-gray-900 p-6 rounded-lg border border-gray-700 mb-6">
         {/* First Row of Controls */}
-        <div className="grid grid-cols-4 gap-4 mb-4">
-          <div className="flex flex-col">
-            <label htmlFor="death-rate" className="text-sm mb-1">
-              Taxa de Morte
-            </label>
-            <input
-              id="death-rate"
-              type="number"
-              step="0.001"
-              min="0"
-              max="1"
-              value={deathRate}
-              onChange={handleDeathRateChange}
-              disabled={running}
-              className="w-full px-3 py-2 rounded bg-gray-800 border border-gray-600 focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
 
+        <div className="grid grid-cols-4 gap-4 mb-4">
           <div className="flex flex-col">
             <label htmlFor="analysis-interval" className="text-sm mb-1">
               Intervalo de Análise
@@ -117,6 +110,59 @@ export default function Home() {
               min="1"
               value={analysisInterval}
               onChange={handleAnalysisIntervalChange}
+              disabled={running}
+              className="w-full px-3 py-2 rounded bg-gray-800 border border-gray-600 focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div className="flex flex-col">
+            <label htmlFor="death-rate" className="text-sm mb-1">
+              Taxa de Morte (%)
+            </label>
+            <div className="relative">
+              <input
+                id="death-rate"
+                type="number"
+                min="0"
+                max="100"
+                step="1"
+                value={Math.round(deathRate * 100)}
+                onChange={handleDeathRateChange}
+                disabled={running}
+                className="w-full px-3 py-2 rounded bg-gray-800 border border-gray-600 focus:ring-2 focus:ring-blue-500 pr-10"
+              />
+              <span className="absolute right-3 top-2 text-gray-400">%</span>
+            </div>
+          </div>
+
+          <div className="flex flex-col">
+            <label htmlFor="viral-death-rate" className="text-sm mb-1">
+              Letalidade do Vírus (%)
+            </label>
+            <div className="relative">
+              <input
+                id="viral-death-rate"
+                type="number"
+                min="0"
+                max="100"
+                step="1"
+                value={Math.round(viralDeathRate * 100)}
+                onChange={handleViralDeathRateChange}
+                disabled={running}
+                className="w-full px-3 py-2 rounded bg-gray-800 border border-gray-600 focus:ring-2 focus:ring-blue-500 pr-10"
+              />
+              <span className="absolute right-3 top-2 text-gray-400">%</span>
+            </div>
+          </div>
+          <div className="flex flex-col">
+            <label htmlFor="contagious-range" className="text-sm mb-1">
+              Distancia de contagio
+            </label>
+            <input
+              id="analysis-interval"
+              type="number"
+              min="1"
+              value={infectionContagiousRange}
+              onChange={handleInfectionRangeChange}
               disabled={running}
               className="w-full px-3 py-2 rounded bg-gray-800 border border-gray-600 focus:ring-2 focus:ring-blue-500"
             />

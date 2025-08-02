@@ -60,8 +60,6 @@ export function updateAgentStates({
       updatedAgent.state = "infected";
       updatedAgent.color = "red";
       updatedAgent.infectionTimer = infectionDuration;
-      console.log(updatedAgent.infectionTimer);
-      console.log(infectionDuration);
     } else if (updatedAgent.state === "infected") {
       updatedAgent.infectionTimer -= 1;
       if (updatedAgent.infectionTimer <= 0) {
@@ -213,6 +211,9 @@ export function processDeathAndReproduction({
   nextAgentIdRef,
   numRows,
   numCols,
+  viralDeathRate,
+  simulationStep,
+  analysisInterval,
 }: {
   agents: Agent[];
   deathRate: number;
@@ -220,8 +221,23 @@ export function processDeathAndReproduction({
   nextAgentIdRef: React.MutableRefObject<number>;
   numRows: number;
   numCols: number;
+  viralDeathRate: number;
+  simulationStep: number;
+  analysisInterval: number;
 }): Agent[] {
-  const survivingAgents = agents.filter(() => Math.random() > deathRate);
+  const survivingAgents = agents.filter((agent) => {
+    if (
+      agent.state === "infected" &&
+      Math.random() < viralDeathRate &&
+      simulationStep % analysisInterval === 0
+    ) {
+      return false;
+    }
+    if (Math.random() < deathRate) {
+      return false;
+    }
+    return true;
+  });
 
   const numToCreate = populationTarget - survivingAgents.length;
   const children = reproduceAgents({
