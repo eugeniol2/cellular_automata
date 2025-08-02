@@ -3,12 +3,17 @@ import { createRandomGrid, createEmptyGrid } from "../utils/functions";
 import { Agent, createAgent, GENOME_LENGTH } from "../agents/agent";
 import { highLifeStep, Grid as CA_Grid } from "../utils/caRules";
 import { calculateBoxCountingDimension } from "../utils/analysis";
+import {
+  handleExtinction,
+  moveAgents,
+  processInfection,
+  updateAgentStates,
+} from "./methods";
 
 const MUTATION_RATE = 0.05;
 const GA_INTERVAL = 100;
 const POPULATION_TARGET = 150;
 const INFECTION_DURATION = 20;
-const NEIGHBOR_RADIUS = 2;
 
 export type CARuleStepFn = (
   prevGrid: CA_Grid,
@@ -127,89 +132,28 @@ export const useSimulation = (
     if (!runningRef.current || !isMounted) return;
 
     setSimulationStep((prev) => prev + 1);
-
     setGrid((prevGrid) => caRuleStepFn(prevGrid, numRows, numCols));
 
     setAgents((prevAgents) => {
-      const infetados = prevAgents.filter((a) => a.state === "infetado");
-      const novosInfetados = new Set<number>();
+      const newlyInfected = processInfection(prevAgents);
+      const processedAgents = updateAgentStates(prevAgents, newlyInfected);
 
-      if (infetados.length > 0) {
-        const suscetiveis = prevAgents.filter((a) => a.state === "suscetivel");
-        for (const suscetivel of suscetiveis) {
-          let vizinhosInfetados = 0;
-          for (const infetado of infetados) {
-            const dist = Math.sqrt(
-              Math.pow(suscetivel.row - infetado.row, 2) +
-                Math.pow(suscetivel.col - infetado.col, 2)
-            );
-            if (dist <= NEIGHBOR_RADIUS) {
-              vizinhosInfetados++;
-            }
-          }
-          if (vizinhosInfetados > 0) {
-            const perceptionIndex = Math.min(
-              vizinhosInfetados,
-              GENOME_LENGTH - 1
-            );
-            const infectionProb = suscetivel.genome[perceptionIndex];
-            if (Math.random() < infectionProb) {
-              novosInfetados.add(suscetivel.id);
-            }
-          }
-        }
-      }
-
-      const agentesProcessados = prevAgents.map((agent) => {
-        const updatedAgent = { ...agent };
-
-        if (
-          updatedAgent.state === "suscetivel" &&
-          novosInfetados.has(updatedAgent.id)
-        ) {
-          updatedAgent.state = "infetado";
-          updatedAgent.color = "red";
-          updatedAgent.infectionTimer = INFECTION_DURATION;
-        } else if (updatedAgent.state === "infetado") {
-          updatedAgent.infectionTimer -= 1;
-          if (updatedAgent.infectionTimer <= 0) {
-            updatedAgent.state = "recuperado";
-            updatedAgent.color = "green";
-          }
-        }
-
-        updatedAgent.fitness += 1;
-        return updatedAgent;
-      });
-
-      if (agentesProcessados.length === 0) {
+      const newPopulation = handleExtinction(
+        processedAgents,
+        POPULATION_TARGET,
+        nextAgentId,
+        numRows,
+        numCols
+      );
+      if (newPopulation) {
         setExtinctionCount((c) => c + 1);
         setGeneration(1);
-        const newAgents: Agent[] = [];
-        for (let i = 0; i < POPULATION_TARGET; i++) {
-          newAgents.push(createAgent(nextAgentId.current++, numRows, numCols));
-        }
-        return newAgents;
+        return newPopulation;
       }
 
-      const movedAgents = agentesProcessados.map((agent) => {
-        const dx = Math.floor(Math.random() * 3) - 1;
-        const dy = Math.floor(Math.random() * 3) - 1;
-        if (dx === 0 && dy === 0) return agent;
-        const newRow = (agent.row + dx + numRows) % numRows;
-        const newCol = (agent.col + dy + numCols) % numCols;
-        const isOccupied = agentesProcessados.some(
-          (a) => a.id !== agent.id && a.row === newRow && a.col === newCol
-        );
-        if (!isOccupied) {
-          agent.row = newRow;
-          agent.col = newCol;
-        }
-        return agent;
-      });
+      const movedAgents = moveAgents(processedAgents, numRows, numCols);
 
-      const nextStep = simulationStepRef.current + 1;
-      if (nextStep % GA_INTERVAL === 0) {
+      if ((simulationStep + 1) % GA_INTERVAL === 0) {
         const avgFitness =
           movedAgents.reduce((sum, a) => sum + a.fitness, 0) /
           movedAgents.length;
@@ -223,13 +167,20 @@ export const useSimulation = (
 
         setGeneration((g) => g + 1);
         return runGeneticAlgorithm(movedAgents);
-      } else {
-        return movedAgents;
       }
+
+      return movedAgents;
     });
 
     setTimeout(runSimulationStep, 50);
-  }, [isMounted, caRuleStepFn, numRows, numCols, runGeneticAlgorithm]);
+  }, [
+    isMounted,
+    caRuleStepFn,
+    numRows,
+    numCols,
+    runGeneticAlgorithm,
+    simulationStep,
+  ]);
 
   const start = () => {
     if (!isMounted) return;
