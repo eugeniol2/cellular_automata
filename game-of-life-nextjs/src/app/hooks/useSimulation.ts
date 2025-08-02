@@ -10,11 +10,6 @@ import {
   updateAgentStates,
 } from "./methods";
 
-const DEATH_RATE = 0.001;
-const ANALYSIS_INTERVAL = 10;
-const POPULATION_TARGET = 150;
-const INFECTION_DURATION = 20;
-
 export type CARuleStepFn = (
   prevGrid: CA_Grid,
   numRows: number,
@@ -24,8 +19,13 @@ export type CARuleStepFn = (
 export const useSimulation = (
   numRows: number,
   numCols: number,
-  initialAgentCount: number = POPULATION_TARGET,
-  caRuleStepFn: CARuleStepFn = highLifeStep
+  initialAgentCount: number = 150,
+  caRuleStepFn: CARuleStepFn = highLifeStep,
+  deathRate: number = 0.001,
+  analysisInterval: number = 10,
+  populationTarget: number = 150,
+  infectionDuration: number = 20,
+  infectionContagiousRange: number = 2
 ) => {
   const [grid, setGrid] = useState<number[][]>(() =>
     createEmptyGrid(numRows, numCols)
@@ -64,14 +64,14 @@ export const useSimulation = (
         if (initialAgents[i]) {
           initialAgents[i].state = "infected";
           initialAgents[i].color = "red";
-          initialAgents[i].infectionTimer = INFECTION_DURATION;
+          initialAgents[i].infectionTimer = infectionDuration;
         }
       }
       nextAgentId.current = initialAgentCount;
       return initialAgents;
     });
     setIsMounted(true);
-  }, [numRows, numCols, initialAgentCount]);
+  }, [numRows, numCols, initialAgentCount, infectionDuration]);
 
   const runSimulationStep = useCallback(() => {
     if (!runningRef.current || !isMounted) return;
@@ -80,30 +80,34 @@ export const useSimulation = (
       const nextGrid = caRuleStepFn(prevGrid, numRows, numCols);
 
       setAgents((prevAgents) => {
-        const currentPopulation = processDeathAndReproduction(
-          prevAgents,
-          DEATH_RATE,
-          POPULATION_TARGET,
-          nextAgentId,
+        const currentPopulation = processDeathAndReproduction({
+          agents: prevAgents,
+          deathRate,
+          populationTarget,
+          nextAgentIdRef: nextAgentId,
           numRows,
-          numCols
-        );
+          numCols,
+        });
 
-        const newlyInfected = processInfection(currentPopulation);
-        const processedAgents = updateAgentStates(
-          currentPopulation,
-          newlyInfected
-        );
+        const newlyInfected = processInfection({
+          agents: currentPopulation,
+          neighborRadius: infectionContagiousRange,
+        });
+        const processedAgents = updateAgentStates({
+          agents: currentPopulation,
+          newlyInfected: newlyInfected,
+          infectionDuration: infectionDuration,
+        });
 
-        const movedAgents = moveAgents(
-          processedAgents,
-          nextGrid,
+        const movedAgents = moveAgents({
+          agents: processedAgents,
+          grid: nextGrid,
           numRows,
-          numCols
-        );
+          numCols,
+        });
 
         const currentStep = simulationStepRef.current;
-        if ((currentStep + 1) % ANALYSIS_INTERVAL === 0) {
+        if ((currentStep + 1) % analysisInterval === 0) {
           const avgFitness =
             movedAgents.reduce((sum, a) => sum + a.fitness, 0) /
             movedAgents.length;
@@ -124,7 +128,17 @@ export const useSimulation = (
 
     setSimulationStep((prev) => prev + 1);
     setTimeout(runSimulationStep, 50);
-  }, [isMounted, caRuleStepFn, numRows, numCols]);
+  }, [
+    isMounted,
+    caRuleStepFn,
+    numRows,
+    numCols,
+    deathRate,
+    populationTarget,
+    infectionContagiousRange,
+    infectionDuration,
+    analysisInterval,
+  ]);
 
   const start = () => {
     if (!isMounted) return;
@@ -155,7 +169,7 @@ export const useSimulation = (
         if (initialAgents[i]) {
           initialAgents[i].state = "infected";
           initialAgents[i].color = "red";
-          initialAgents[i].infectionTimer = INFECTION_DURATION;
+          initialAgents[i].infectionTimer = infectionDuration;
         }
       }
       nextAgentId.current = initialAgentCount;

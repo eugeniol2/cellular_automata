@@ -1,10 +1,14 @@
 import { Agent, createAgent, GENOME_LENGTH } from "@/app/agents/agent";
 
-const NEIGHBOR_RADIUS = 2; // infection range
-const INFECTION_DURATION = 20; // infection duration
 const MUTATION_RATE = 0.15;
 
-export function processInfection(agents: Agent[]): Set<number> {
+export function processInfection({
+  agents,
+  neighborRadius,
+}: {
+  agents: Agent[];
+  neighborRadius: number;
+}): Set<number> {
   const infected = agents.filter((a) => a.state === "infected");
   const newlyInfected = new Set<number>();
 
@@ -21,7 +25,7 @@ export function processInfection(agents: Agent[]): Set<number> {
         Math.abs(susceptible.row - infector.row),
         Math.abs(susceptible.col - infector.col)
       );
-      if (dist <= NEIGHBOR_RADIUS) {
+      if (dist <= neighborRadius) {
         infectedNeighbors++;
       }
     }
@@ -38,20 +42,26 @@ export function processInfection(agents: Agent[]): Set<number> {
   return newlyInfected;
 }
 
-export function updateAgentStates(
-  agents: Agent[],
-  newlyInfected: Set<number>
-): Agent[] {
+export function updateAgentStates({
+  agents,
+  newlyInfected,
+  infectionDuration,
+}: {
+  agents: Agent[];
+  newlyInfected: Set<number>;
+  infectionDuration: number;
+}): Agent[] {
   return agents.map((agent) => {
     const updatedAgent = { ...agent };
-
     if (
       updatedAgent.state === "suscetivel" &&
       newlyInfected.has(updatedAgent.id)
     ) {
       updatedAgent.state = "infected";
       updatedAgent.color = "red";
-      updatedAgent.infectionTimer = INFECTION_DURATION;
+      updatedAgent.infectionTimer = infectionDuration;
+      console.log(updatedAgent.infectionTimer);
+      console.log(infectionDuration);
     } else if (updatedAgent.state === "infected") {
       updatedAgent.infectionTimer -= 1;
       if (updatedAgent.infectionTimer <= 0) {
@@ -66,12 +76,17 @@ export function updateAgentStates(
   });
 }
 
-export function moveAgents(
-  agents: Agent[],
-  grid: number[][],
-  numRows: number,
-  numCols: number
-): Agent[] {
+export function moveAgents({
+  agents,
+  grid,
+  numRows,
+  numCols,
+}: {
+  agents: Agent[];
+  grid: number[][];
+  numRows: number;
+  numCols: number;
+}): Agent[] {
   const agentPositions = new Set(agents.map((a) => `${a.row},${a.col}`));
 
   return agents.map((agent) => {
@@ -99,13 +114,21 @@ export function moveAgents(
   });
 }
 
-export function handleExtinction(
-  agents: Agent[],
-  populationTarget: number,
-  nextAgentIdRef: React.MutableRefObject<number>,
-  numRows: number,
-  numCols: number
-): Agent[] | null {
+export function handleExtinction({
+  agents,
+  populationTarget,
+  nextAgentIdRef,
+  numRows,
+  numCols,
+  infectionDuration,
+}: {
+  agents: Agent[];
+  populationTarget: number;
+  nextAgentIdRef: React.MutableRefObject<number>;
+  numRows: number;
+  numCols: number;
+  infectionDuration: number;
+}): Agent[] | null {
   if (agents.length > 0) {
     return null;
   }
@@ -118,19 +141,25 @@ export function handleExtinction(
     if (newAgents[i]) {
       newAgents[i].state = "infected";
       newAgents[i].color = "red";
-      newAgents[i].infectionTimer = INFECTION_DURATION;
+      newAgents[i].infectionTimer = infectionDuration;
     }
   }
   return newAgents;
 }
 
-function reproduceAgents(
-  parents: Agent[],
-  numToCreate: number,
-  nextAgentIdRef: React.MutableRefObject<number>,
-  numRows: number,
-  numCols: number
-): Agent[] {
+function reproduceAgents({
+  parents,
+  numToCreate,
+  nextAgentIdRef,
+  numRows,
+  numCols,
+}: {
+  parents: Agent[];
+  numToCreate: number;
+  nextAgentIdRef: React.MutableRefObject<number>;
+  numRows: number;
+  numCols: number;
+}): Agent[] {
   if (parents.length === 0 || numToCreate === 0) {
     return [];
   }
@@ -177,24 +206,31 @@ function reproduceAgents(
   return newAgents;
 }
 
-export function processDeathAndReproduction(
-  agents: Agent[],
-  deathRate: number,
-  populationTarget: number,
-  nextAgentIdRef: React.MutableRefObject<number>,
-  numRows: number,
-  numCols: number
-): Agent[] {
+export function processDeathAndReproduction({
+  agents,
+  deathRate,
+  populationTarget,
+  nextAgentIdRef,
+  numRows,
+  numCols,
+}: {
+  agents: Agent[];
+  deathRate: number;
+  populationTarget: number;
+  nextAgentIdRef: React.MutableRefObject<number>;
+  numRows: number;
+  numCols: number;
+}): Agent[] {
   const survivingAgents = agents.filter(() => Math.random() > deathRate);
 
   const numToCreate = populationTarget - survivingAgents.length;
-  const children = reproduceAgents(
-    survivingAgents,
+  const children = reproduceAgents({
+    parents: survivingAgents,
     numToCreate,
     nextAgentIdRef,
     numRows,
-    numCols
-  );
+    numCols,
+  });
 
   return [...survivingAgents, ...children];
 }
