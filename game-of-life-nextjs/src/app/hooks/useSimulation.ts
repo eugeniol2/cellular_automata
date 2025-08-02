@@ -183,7 +183,7 @@ export const useSimulation = (
     });
 
     setSimulationStep((prev) => prev + 1);
-    setTimeout(runSimulationStep, 50);
+    setTimeout(runSimulationStep, 300);
   }, [isMounted, caRuleStepFn, numRows, numCols, runGeneticAlgorithm]);
 
   const start = () => {
@@ -210,6 +210,13 @@ export const useSimulation = (
       const initialAgents: Agent[] = [];
       for (let i = 0; i < initialAgentCount; i++) {
         initialAgents.push(createAgent(i, numRows, numCols));
+      }
+      for (let i = 0; i < 5; i++) {
+        if (initialAgents[i]) {
+          initialAgents[i].state = "infected";
+          initialAgents[i].color = "red";
+          initialAgents[i].infectionTimer = INFECTION_DURATION;
+        }
       }
       nextAgentId.current = initialAgentCount;
       return initialAgents;
