@@ -2,16 +2,15 @@ export interface Agent {
   id: number;
   row: number;
   col: number;
-  state: "normal" | "sheltered";
+  state: "suscetivel" | "infetado" | "recuperado";
   color: string;
   fitness: number;
-  prediction: boolean;
   genome: number[];
-  shelterTimer: number;
+  infectionTimer: number;
   cooldownTimer?: number;
 }
 
-export const GENOME_LENGTH = 512;
+export const GENOME_LENGTH = 101;
 
 export function createRandomGenome(): number[] {
   return Array.from({ length: GENOME_LENGTH }, () => Math.round(Math.random()));
@@ -27,12 +26,11 @@ export function createAgent(
     id,
     row: Math.floor(Math.random() * numRows),
     col: Math.floor(Math.random() * numCols),
-    state: "normal",
+    state: "suscetivel",
     color: "#fff",
     fitness: 0,
-    prediction: false,
     genome: genome || createRandomGenome(),
-    shelterTimer: 0,
+    infectionTimer: 0,
     cooldownTimer: 0,
   };
 }

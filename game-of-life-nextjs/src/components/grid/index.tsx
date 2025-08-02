@@ -7,13 +7,11 @@ interface GridProps {
   toggleCell: (row: number, col: number) => void;
   numRows: number;
   numCols: number;
-  isRaining: boolean;
   cellSize?: number;
 }
 
-const COLOR_DEAD = "rgb(17 24 39)"; // gray-900
-const COLOR_ALIVE_NORMAL = "rgb(34 197 94)"; // green-500
-const COLOR_ALIVE_RAINING = "rgb(59 130 246)"; // blue-500
+const COLOR_DEAD = "rgb(17 24 39)";
+const COLOR_ALIVE = "rgb(55 65 81)";
 
 const Grid: React.FC<GridProps> = ({
   grid,
@@ -21,56 +19,45 @@ const Grid: React.FC<GridProps> = ({
   toggleCell,
   numRows,
   numCols,
-  isRaining,
-  cellSize = 15,
+  cellSize = 12,
 }) => {
   return (
     <div
-      className="inline-grid border border-gray-700 relative"
+      className="inline-grid border border-gray-700 relative shadow-2xl"
       style={{
         gridTemplateColumns: `repeat(${numCols}, ${cellSize}px)`,
         gridTemplateRows: `repeat(${numRows}, ${cellSize}px)`,
-        width: `${numCols * cellSize}px`,
-        height: `${numRows * cellSize}px`,
       }}
     >
       {grid.map((rows, i) =>
-        rows.map((cellState, k) => {
-          let backgroundColor = COLOR_DEAD;
-          if (cellState === 1) {
-            backgroundColor = isRaining
-              ? COLOR_ALIVE_RAINING
-              : COLOR_ALIVE_NORMAL;
-          }
-
-          return (
-            <div
-              key={`cell-${i}-${k}`}
-              onClick={() => toggleCell(i, k)}
-              className={`border border-gray-800`}
-              style={{
-                width: `${cellSize}px`,
-                height: `${cellSize}px`,
-                backgroundColor: backgroundColor, // Apply calculated color
-              }}
-            />
-          );
-        })
+        rows.map((cellState, k) => (
+          <div
+            key={`cell-${i}-${k}`}
+            onClick={() => toggleCell(i, k)}
+            className="border-t border-l border-gray-800"
+            style={{
+              width: `${cellSize}px`,
+              height: `${cellSize}px`,
+              backgroundColor: cellState === 1 ? COLOR_ALIVE : COLOR_DEAD,
+            }}
+          />
+        ))
       )}
 
       {agents.map((agent) => (
         <div
           key={`agent-${agent.id}`}
-          className="absolute rounded-full shadow-md transition-colors duration-100"
+          className="absolute rounded-full transition-colors duration-200"
           style={{
             width: `${cellSize * 0.8}px`,
             height: `${cellSize * 0.8}px`,
             top: `${agent.row * cellSize + cellSize * 0.1}px`,
             left: `${agent.col * cellSize + cellSize * 0.1}px`,
             backgroundColor: agent.color,
+            border: "1px solid rgba(0,0,0,0.5)",
             zIndex: 10,
           }}
-          title={`Agent ${agent.id}`}
+          title={`Agente ${agent.id} (${agent.state})`}
         />
       ))}
     </div>
