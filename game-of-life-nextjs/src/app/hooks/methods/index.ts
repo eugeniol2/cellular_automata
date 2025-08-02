@@ -66,9 +66,12 @@ export function updateAgentStates(
 
 export function moveAgents(
   agents: Agent[],
+  grid: number[][],
   numRows: number,
   numCols: number
 ): Agent[] {
+  const agentPositions = new Set(agents.map((a) => `${a.row},${a.col}`));
+
   return agents.map((agent) => {
     const dx = Math.floor(Math.random() * 3) - 1;
     const dy = Math.floor(Math.random() * 3) - 1;
@@ -77,15 +80,21 @@ export function moveAgents(
     const newRow = (agent.row + dx + numRows) % numRows;
     const newCol = (agent.col + dy + numCols) % numCols;
 
-    const isOccupied = agents.some(
-      (other) =>
-        other.id !== agent.id && other.row === newRow && other.col === newCol
-    );
-
-    if (!isOccupied) {
-      return { ...agent, row: newRow, col: newCol };
+    const isNextCellPositionAvailable = grid[newRow]?.[newCol] === 1;
+    if (isNextCellPositionAvailable) {
+      return agent;
     }
-    return agent;
+
+    const newPosKey = `${newRow},${newCol}`;
+    const isNextCellOccupiedByAnotherAgent = agentPositions.has(newPosKey);
+    if (isNextCellOccupiedByAnotherAgent) {
+      return agent;
+    }
+
+    agentPositions.delete(`${agent.row},${agent.col}`);
+    agentPositions.add(newPosKey);
+    console.log("1");
+    return { ...agent, row: newRow, col: newCol };
   });
 }
 

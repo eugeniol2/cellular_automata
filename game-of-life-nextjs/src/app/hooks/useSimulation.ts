@@ -43,6 +43,8 @@ export const useSimulation = (
 
   const [isMounted, setIsMounted] = useState(false);
   const [agents, setAgents] = useState<Agent[]>([]);
+  const agentsRef = useRef(agents);
+  agentsRef.current = agents;
   const nextAgentId = useRef(initialAgentCount);
   const [generation, setGeneration] = useState(1);
 
@@ -131,56 +133,58 @@ export const useSimulation = (
   const runSimulationStep = useCallback(() => {
     if (!runningRef.current || !isMounted) return;
 
-    setSimulationStep((prev) => prev + 1);
-    setGrid((prevGrid) => caRuleStepFn(prevGrid, numRows, numCols));
+    setGrid((prevGrid) => {
+      const nextGrid = caRuleStepFn(prevGrid, numRows, numCols);
 
-    setAgents((prevAgents) => {
-      const newlyInfected = processInfection(prevAgents);
-      const processedAgents = updateAgentStates(prevAgents, newlyInfected);
+      setAgents((prevAgents) => {
+        const newlyInfected = processInfection(prevAgents);
+        const processedAgents = updateAgentStates(prevAgents, newlyInfected);
 
-      const newPopulation = handleExtinction(
-        processedAgents,
-        POPULATION_TARGET,
-        nextAgentId,
-        numRows,
-        numCols
-      );
-      if (newPopulation) {
-        setExtinctionCount((c) => c + 1);
-        setGeneration(1);
-        return newPopulation;
-      }
-
-      const movedAgents = moveAgents(processedAgents, numRows, numCols);
-
-      if ((simulationStep + 1) % GA_INTERVAL === 0) {
-        const avgFitness =
-          movedAgents.reduce((sum, a) => sum + a.fitness, 0) /
-          movedAgents.length;
-        setAvgFitnessHistory((hist) => [...hist, avgFitness]);
-
-        const dimension = calculateBoxCountingDimension(
-          gridRef.current,
-          movedAgents
+        const newPopulation = handleExtinction(
+          processedAgents,
+          POPULATION_TARGET,
+          nextAgentId,
+          numRows,
+          numCols
         );
-        setDimensionHistory((hist) => [...hist, dimension]);
+        if (newPopulation) {
+          setExtinctionCount((c) => c + 1);
+          setGeneration(1);
+          return newPopulation;
+        }
 
-        setGeneration((g) => g + 1);
-        return runGeneticAlgorithm(movedAgents);
-      }
+        const movedAgents = moveAgents(
+          processedAgents,
+          nextGrid,
+          numRows,
+          numCols
+        );
 
-      return movedAgents;
+        if ((simulationStepRef.current + 1) % GA_INTERVAL === 0) {
+          const avgFitness =
+            movedAgents.reduce((sum, a) => sum + a.fitness, 0) /
+            movedAgents.length;
+          setAvgFitnessHistory((hist) => [...hist, avgFitness]);
+
+          const dimension = calculateBoxCountingDimension(
+            nextGrid,
+            movedAgents
+          );
+          setDimensionHistory((hist) => [...hist, dimension]);
+
+          setGeneration((g) => g + 1);
+          return runGeneticAlgorithm(movedAgents);
+        }
+
+        return movedAgents;
+      });
+
+      return nextGrid;
     });
 
+    setSimulationStep((prev) => prev + 1);
     setTimeout(runSimulationStep, 50);
-  }, [
-    isMounted,
-    caRuleStepFn,
-    numRows,
-    numCols,
-    runGeneticAlgorithm,
-    simulationStep,
-  ]);
+  }, [isMounted, caRuleStepFn, numRows, numCols, runGeneticAlgorithm]);
 
   const start = () => {
     if (!isMounted) return;
