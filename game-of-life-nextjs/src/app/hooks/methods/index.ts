@@ -215,6 +215,9 @@ export function processDeathAndReproduction({
   simulationStep,
   analysisInterval,
   enableReproduction,
+  onVirusDeath,
+  onNaturalDeath,
+  onReproduction,
 }: {
   agents: Agent[];
   deathRate: number;
@@ -226,20 +229,35 @@ export function processDeathAndReproduction({
   simulationStep: number;
   analysisInterval: number;
   enableReproduction: boolean;
+  onVirusDeath?: () => void;
+  onNaturalDeath?: () => void;
+  onReproduction?: (count: number) => void;
 }): Agent[] {
+  let virusDeathCount = 0;
+  let naturalDeathCount = 0;
+
   const survivingAgents = agents.filter((agent) => {
     if (
       agent.state === "infected" &&
       Math.random() < viralDeathRate &&
       simulationStep % analysisInterval === 0
     ) {
+      virusDeathCount++;
       return false;
     }
     if (Math.random() < deathRate) {
+      naturalDeathCount++;
       return false;
     }
     return true;
   });
+
+  if (virusDeathCount > 0) onVirusDeath?.();
+  if (naturalDeathCount > 0) onNaturalDeath?.();
+
+  if (!enableReproduction) {
+    return survivingAgents;
+  }
 
   const numToCreate = enableReproduction
     ? populationTarget - survivingAgents.length
@@ -252,6 +270,10 @@ export function processDeathAndReproduction({
     numRows,
     numCols,
   });
+
+  if (numToCreate > 0) {
+    onReproduction?.(numToCreate);
+  }
 
   return [...survivingAgents, ...children];
 }

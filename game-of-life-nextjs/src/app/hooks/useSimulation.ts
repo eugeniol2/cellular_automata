@@ -32,6 +32,12 @@ type UseSimulationProps = {
   infectionDuration: number;
   infectionContagiousRange: number;
   enableReproduction: boolean;
+  setNaturalDeaths: React.Dispatch<React.SetStateAction<number>>;
+  setReproductions: React.Dispatch<React.SetStateAction<number>>;
+  setVirusDeaths: React.Dispatch<React.SetStateAction<number>>;
+  onVirusDeath?: () => void;
+  onNaturalDeath?: () => void;
+  onReproduction?: (count: number) => void;
 };
 
 export const useSimulation = ({
@@ -46,6 +52,12 @@ export const useSimulation = ({
   infectionContagiousRange,
   viralDeathRate,
   enableReproduction,
+  onVirusDeath,
+  onNaturalDeath,
+  onReproduction,
+  setNaturalDeaths,
+  setReproductions,
+  setVirusDeaths,
 }: UseSimulationProps) => {
   const [grid, setGrid] = useState<number[][]>(() =>
     createEmptyGrid(numRows, numCols)
@@ -110,6 +122,9 @@ export const useSimulation = ({
           simulationStep: simulationStepRef.current,
           analysisInterval,
           enableReproduction,
+          onVirusDeath,
+          onNaturalDeath,
+          onReproduction,
         });
 
         const newlyInfected = processInfection({
@@ -161,6 +176,9 @@ export const useSimulation = ({
     viralDeathRate,
     analysisInterval,
     enableReproduction,
+    onVirusDeath,
+    onNaturalDeath,
+    onReproduction,
     infectionContagiousRange,
     infectionDuration,
   ]);
@@ -201,6 +219,9 @@ export const useSimulation = ({
     });
     setAvgFitnessHistory([]);
     setDimensionHistory([]);
+    setNaturalDeaths(0);
+    setReproductions(0);
+    setVirusDeaths(0);
   };
 
   return {

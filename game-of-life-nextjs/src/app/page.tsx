@@ -18,9 +18,13 @@ export default function Home() {
   const [analysisInterval, setAnalysisInterval] = useState(10);
   const [populationTarget, setPopulationTarget] = useState(150);
   const [infectionDuration, setInfectionDuration] = useState(70);
+  const [virusDeaths, setVirusDeaths] = useState(0);
+  const [naturalDeaths, setNaturalDeaths] = useState(0);
+  const [reproductions, setReproductions] = useState(0);
   const [enableReproduction, setEnableReproduction] = useState(true);
   const selectedRule =
     caRuleOptions.find((r) => r.id === selectedRuleId) || caRuleOptions[0];
+  const [initialAgentCountRef] = useState(agentCount);
 
   const {
     grid,
@@ -44,6 +48,12 @@ export default function Home() {
     infectionDuration,
     infectionContagiousRange: infectionContagiousRange,
     enableReproduction,
+    onVirusDeath: () => setVirusDeaths((v) => v + 1),
+    onNaturalDeath: () => setNaturalDeaths((v) => v + 1),
+    onReproduction: (count) => setReproductions((v) => v + count),
+    setNaturalDeaths,
+    setReproductions,
+    setVirusDeaths,
   });
 
   const handleRowsChange = (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -56,8 +66,8 @@ export default function Home() {
     setAgentCount(Number(e.target.value));
 
   const handleDeathRateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = Math.min(100, Math.max(0, Number(e.target.value))) / 100;
-    setDeathRate(value);
+    const value = e.target.value;
+    setDeathRate(Number(value));
   };
 
   const handleViralDeathRateChange = (
@@ -89,6 +99,13 @@ export default function Home() {
   const recuperadosCount = agents.filter(
     (a) => a.state === "recuperado"
   ).length;
+  const growthRate =
+    agents.length > 0
+      ? (
+          ((agents.length - initialAgentCountRef) / initialAgentCountRef) *
+          100
+        ).toFixed(1) + "%"
+      : "0%";
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-12 bg-gray-950 text-white font-mono">
@@ -122,8 +139,8 @@ export default function Home() {
                 type="number"
                 min="0"
                 max="100"
-                step="1"
-                value={Math.round(deathRate * 100)}
+                step="0.01"
+                value={deathRate}
                 onChange={handleDeathRateChange}
                 disabled={running}
                 className="w-full px-3 py-2 rounded bg-gray-800 border border-gray-600 focus:ring-2 focus:ring-blue-500 pr-10"
@@ -197,7 +214,6 @@ export default function Home() {
           </div>
         </div>
 
-   
         <div className="grid grid-cols-4 gap-4 mb-6">
           <div className="flex flex-col">
             <label htmlFor="ca-rule" className="text-sm mb-1">
@@ -266,8 +282,26 @@ export default function Home() {
             />
           </div>
         </div>
+        <div className="w-full max-w-6xl bg-gray-900 p-4 rounded-lg border border-gray-700 mb-6 grid grid-cols-4 gap-4 text-lg">
+          {/* ... existing stats ... */}
+          <div>
+            Mortes por Vírus:
+            <span className="text-red-500 ml-2">{virusDeaths}</span>
+          </div>
+          <div>
+            Mortes Naturais:
+            <span className="text-gray-400 ml-2">{naturalDeaths}</span>
+          </div>
+          <div>
+            Reproduções:
+            <span className="text-blue-400 ml-2">{reproductions}</span>
+          </div>
+          <div>
+            Taxa de Crescimento:
+            <span className="text-green-400 ml-2">{growthRate}</span>
+          </div>
+        </div>
 
-     
         <div className="flex justify-center space-x-4">
           <button
             onClick={running ? stop : start}
@@ -302,7 +336,6 @@ export default function Home() {
         </div>
       </div>
 
-  
       <div className="w-full max-w-6xl bg-gray-900 p-4 rounded-lg border border-gray-700 mb-6 grid grid-cols-3 gap-4 text-lg">
         <div>
           Suscetíveis:
