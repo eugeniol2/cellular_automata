@@ -214,6 +214,7 @@ export function processDeathAndReproduction({
   viralDeathRate,
   simulationStep,
   analysisInterval,
+  enableReproduction,
 }: {
   agents: Agent[];
   deathRate: number;
@@ -224,6 +225,7 @@ export function processDeathAndReproduction({
   viralDeathRate: number;
   simulationStep: number;
   analysisInterval: number;
+  enableReproduction: boolean;
 }): Agent[] {
   const survivingAgents = agents.filter((agent) => {
     if (
@@ -239,7 +241,10 @@ export function processDeathAndReproduction({
     return true;
   });
 
-  const numToCreate = populationTarget - survivingAgents.length;
+  const numToCreate = enableReproduction
+    ? populationTarget - survivingAgents.length
+    : 0;
+
   const children = reproduceAgents({
     parents: survivingAgents,
     numToCreate,

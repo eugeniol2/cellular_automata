@@ -12,12 +12,13 @@ export default function Home() {
   const [numCols, setNumCols] = useState(80);
   const [agentCount, setAgentCount] = useState(POPULATION_SIZE);
   const [selectedRuleId, setSelectedRuleId] = useState(caRuleOptions[0].id);
-  const [deathRate, setDeathRate] = useState(0.1);
+  const [deathRate, setDeathRate] = useState(0.01);
   const [viralDeathRate, setViralDeathRate] = useState(0.1);
-  const [infectionContagiousRange, setInfectionContagiousRange] = useState(2);
+  const [infectionContagiousRange, setInfectionContagiousRange] = useState(3);
   const [analysisInterval, setAnalysisInterval] = useState(10);
   const [populationTarget, setPopulationTarget] = useState(150);
-  const [infectionDuration, setInfectionDuration] = useState(20);
+  const [infectionDuration, setInfectionDuration] = useState(70);
+  const [enableReproduction, setEnableReproduction] = useState(true);
   const selectedRule =
     caRuleOptions.find((r) => r.id === selectedRuleId) || caRuleOptions[0];
 
@@ -42,6 +43,7 @@ export default function Home() {
     populationTarget,
     infectionDuration,
     infectionContagiousRange: infectionContagiousRange,
+    enableReproduction,
   });
 
   const handleRowsChange = (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -80,7 +82,6 @@ export default function Home() {
   const handleInfectionRangeChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setInfectionContagiousRange(Number(e.target.value));
 
-  // Count agent states
   const suscetiveisCount = agents.filter(
     (a) => a.state === "suscetivel"
   ).length;
@@ -95,10 +96,7 @@ export default function Home() {
         Simulação de Epidemia com Autómatos Celulares e AG
       </h1>
 
-      {/* Control Panel Container */}
       <div className="w-full max-w-6xl bg-gray-900 p-6 rounded-lg border border-gray-700 mb-6">
-        {/* First Row of Controls */}
-
         <div className="grid grid-cols-4 gap-4 mb-4">
           <div className="flex flex-col">
             <label htmlFor="analysis-interval" className="text-sm mb-1">
@@ -199,7 +197,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Second Row of Controls */}
+   
         <div className="grid grid-cols-4 gap-4 mb-6">
           <div className="flex flex-col">
             <label htmlFor="ca-rule" className="text-sm mb-1">
@@ -269,7 +267,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Action Buttons */}
+     
         <div className="flex justify-center space-x-4">
           <button
             onClick={running ? stop : start}
@@ -289,9 +287,22 @@ export default function Home() {
             Reiniciar
           </button>
         </div>
+        <div className="flex items-center space-x-2">
+          <input
+            id="enable-reproduction"
+            type="checkbox"
+            checked={enableReproduction}
+            onChange={(e) => setEnableReproduction(e.target.checked)}
+            disabled={running}
+            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+          />
+          <label htmlFor="enable-reproduction" className="text-sm">
+            Ativar Reprodução
+          </label>
+        </div>
       </div>
 
-      {/* Stats Panel */}
+  
       <div className="w-full max-w-6xl bg-gray-900 p-4 rounded-lg border border-gray-700 mb-6 grid grid-cols-3 gap-4 text-lg">
         <div>
           Suscetíveis:
