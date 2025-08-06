@@ -208,6 +208,7 @@ export function processDeathAndReproduction({
   setVirusDeathCount,
   setNaturalDeathCount,
   setReproductionCount,
+  bornImmuneChance,
 }: {
   agents: Agent[];
   deathRate: number;
@@ -219,6 +220,7 @@ export function processDeathAndReproduction({
   simulationStep: number;
   analysisInterval: number;
   enableReproduction: boolean;
+  bornImmuneChance: number;
   setVirusDeathCount: React.Dispatch<React.SetStateAction<number>>;
   setNaturalDeathCount: React.Dispatch<React.SetStateAction<number>>;
   setReproductionCount: React.Dispatch<React.SetStateAction<number>>;
@@ -273,6 +275,7 @@ export function processDeathAndReproduction({
     numCols,
     analysisInterval,
     simulationStep,
+    bornImmunityChance: bornImmuneChance,
   });
 
   if (numToCreate > 0 && simulationStep % analysisInterval === 0) {

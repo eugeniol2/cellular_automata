@@ -20,6 +20,7 @@ export default function Home() {
   const [analysisInterval, setAnalysisInterval] = useState(10);
   const [populationTarget, setPopulationTarget] = useState(150);
   const [infectionDuration, setInfectionDuration] = useState(70);
+  const [bornImmuneChance, setBornImmuneChance] = useState(0.3);
   const [deathCounterAtom] = useAtom(globalAtoms.virusDeathsAtom);
   const [naturalDeathsAtom] = useAtom(globalAtoms.naturalDeathsAtom);
   const [reproductionCountAtom] = useAtom(globalAtoms.reproductionCountAtom);
@@ -50,6 +51,7 @@ export default function Home() {
     infectionDuration,
     infectionContagiousRange: infectionContagiousRange,
     enableReproduction,
+    bornImmuneChance,
   });
 
   const handleRowsChange = (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -84,6 +86,13 @@ export default function Home() {
   const handleInfectionDurationChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => setInfectionDuration(Number(e.target.value));
+
+  const handleImmuneBornChanceChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const value = Math.min(1, Math.max(0, Number(e.target.value) / 100));
+    setBornImmuneChance(value);
+  };
 
   const handleInfectionRangeChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setInfectionContagiousRange(Number(e.target.value));
@@ -130,7 +139,7 @@ export default function Home() {
           </div>
           <div className="flex flex-col">
             <label htmlFor="death-rate" className="text-sm mb-1">
-              Taxa de Morte (%)
+              Taxa de Morte(%)
             </label>
             <div className="relative">
               <input
@@ -147,10 +156,9 @@ export default function Home() {
               <span className="absolute right-3 top-2 text-gray-400">%</span>
             </div>
           </div>
-
           <div className="flex flex-col">
             <label htmlFor="viral-death-rate" className="text-sm mb-1">
-              Letalidade do Vírus (%)
+              Letalidade do Vírus(%)
             </label>
             <div className="relative">
               <input
@@ -181,7 +189,6 @@ export default function Home() {
               className="w-full px-3 py-2 rounded bg-gray-800 border border-gray-600 focus:ring-2 focus:ring-blue-500"
             />
           </div>
-
           <div className="flex flex-col">
             <label htmlFor="population-target" className="text-sm mb-1">
               Alvo Populacional
@@ -196,7 +203,6 @@ export default function Home() {
               className="w-full px-3 py-2 rounded bg-gray-800 border border-gray-600 focus:ring-2 focus:ring-blue-500"
             />
           </div>
-
           <div className="flex flex-col">
             <label htmlFor="infection-duration" className="text-sm mb-1">
               Duração da Infecção
@@ -210,6 +216,25 @@ export default function Home() {
               disabled={running}
               className="w-full px-3 py-2 rounded bg-gray-800 border border-gray-600 focus:ring-2 focus:ring-blue-500"
             />
+          </div>
+          <div className="relative">
+            <label htmlFor="born-immune-chance" className="text-sm mb-1">
+              Chance filhos nascerem imune(%)
+            </label>
+            <div className="relative">
+              <input
+                id="born-immune-chance"
+                type="number"
+                min="0"
+                max="100"
+                step="1"
+                value={Math.round(bornImmuneChance * 100)}
+                onChange={handleImmuneBornChanceChange}
+                disabled={running}
+                className="w-full px-3 py-2 rounded bg-gray-800 border border-gray-600 focus:ring-2 focus:ring-blue-500 pr-10"
+              />
+              <span className="absolute right-3 top-2 text-gray-400">%</span>
+            </div>
           </div>
         </div>
 

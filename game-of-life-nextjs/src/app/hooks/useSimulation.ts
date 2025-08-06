@@ -34,6 +34,7 @@ type UseSimulationProps = {
   infectionDuration: number;
   infectionContagiousRange: number;
   enableReproduction: boolean;
+  bornImmuneChance: number;
 };
 
 export const useSimulation = ({
@@ -48,6 +49,7 @@ export const useSimulation = ({
   infectionContagiousRange,
   viralDeathRate,
   enableReproduction,
+  bornImmuneChance,
 }: UseSimulationProps) => {
   const [grid, setGrid] = useState<number[][]>(() =>
     createEmptyGrid(numRows, numCols)
@@ -124,6 +126,7 @@ export const useSimulation = ({
           setVirusDeathCount: setVirusDeathCounterAtom,
           setNaturalDeathCount: setNaturalDeathsAtom,
           setReproductionCount: setReproductionCountAtom,
+          bornImmuneChance,
         });
 
         console.log("output", currentPopulation);
@@ -191,6 +194,7 @@ export const useSimulation = ({
     setVirusDeathCounterAtom,
     setNaturalDeathsAtom,
     setReproductionCountAtom,
+    bornImmuneChance,
     agents,
     infectionContagiousRange,
     infectionDuration,
