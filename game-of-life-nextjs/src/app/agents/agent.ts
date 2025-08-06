@@ -8,6 +8,7 @@ export interface Agent {
   genome: number[];
   infectionTimer: number;
   cooldownTimer?: number;
+  isBornImmune?: boolean;
 }
 
 export const GENOME_LENGTH = 101;
@@ -23,17 +24,22 @@ export function createAgent(
   id: number,
   numRows: number,
   numCols: number,
-  genome?: number[]
+  genome?: number[],
+  isBornImmune: boolean = false
 ): Agent {
+  const state = isBornImmune ? "recuperado" : "suscetivel";
+  const color = isBornImmune ? "yellow" : "#fff";
+
   return {
     id,
     row: Math.floor(Math.random() * numRows),
     col: Math.floor(Math.random() * numCols),
-    state: "suscetivel",
-    color: "#fff",
+    state,
+    color,
     fitness: 0,
     genome: genome || createRandomGenome(),
     infectionTimer: 0,
     cooldownTimer: 0,
+    isBornImmune,
   };
 }

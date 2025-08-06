@@ -20,9 +20,6 @@ export default function Home() {
   const [analysisInterval, setAnalysisInterval] = useState(10);
   const [populationTarget, setPopulationTarget] = useState(150);
   const [infectionDuration, setInfectionDuration] = useState(70);
-  const [virusDeaths, setVirusDeaths] = useState(0);
-  const [naturalDeaths, setNaturalDeaths] = useState(0);
-  const [reproductions, setReproductions] = useState(0);
   const [deathCounterAtom] = useAtom(globalAtoms.virusDeathsAtom);
   const [naturalDeathsAtom] = useAtom(globalAtoms.naturalDeathsAtom);
   const [reproductionCountAtom] = useAtom(globalAtoms.reproductionCountAtom);
@@ -53,9 +50,6 @@ export default function Home() {
     infectionDuration,
     infectionContagiousRange: infectionContagiousRange,
     enableReproduction,
-    setNaturalDeaths,
-    setReproductions,
-    setVirusDeaths,
   });
 
   const handleRowsChange = (e: React.ChangeEvent<HTMLInputElement>) =>
@@ -103,12 +97,11 @@ export default function Home() {
     (a) => a.state === "recuperado"
   ).length;
 
-  const totalDeaths = virusDeaths + naturalDeaths;
   const currentPopulation = agents.length;
 
   const growthRate =
     currentPopulation > 0
-      ? ((reproductions - totalDeaths) / currentPopulation) * 100
+      ? ((reproductionCountAtom - deathCounterAtom) / currentPopulation) * 100
       : 0;
 
   return (

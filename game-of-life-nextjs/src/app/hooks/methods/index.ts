@@ -66,6 +66,7 @@ export function updateAgentStates({
       if (updatedAgent.infectionTimer <= 0) {
         updatedAgent.state = "recuperado";
         updatedAgent.color = "green";
+        updatedAgent.color = updatedAgent.isBornImmune ? "yellow" : "green";
       }
     }
 
@@ -163,6 +164,9 @@ function reproduceAgents({
       ...parent2.genome.slice(crossoverPoint),
     ];
 
+    const isBornImmune =
+      parent1.state === "recuperado" || parent2.state === "recuperado";
+
     const mutatedGenome = childGenome.map((gene) => {
       if (Math.random() < MUTATION_RATE) {
         const mutationAmount = (Math.random() - 0.5) * 0.1;
@@ -172,7 +176,13 @@ function reproduceAgents({
     });
 
     newAgents.push(
-      createAgent(nextAgentIdRef.current++, numRows, numCols, mutatedGenome)
+      createAgent(
+        nextAgentIdRef.current++,
+        numRows,
+        numCols,
+        mutatedGenome,
+        isBornImmune
+      )
     );
   }
 
