@@ -121,6 +121,7 @@ function reproduceAgents({
   numCols,
   simulationStep,
   analysisInterval,
+  bornImmunityChance = 0.7,
 }: {
   parents: Agent[];
   numToCreate: number;
@@ -129,6 +130,7 @@ function reproduceAgents({
   numCols: number;
   simulationStep: number;
   analysisInterval: number;
+  bornImmunityChance?: number;
 }): Agent[] {
   if (
     parents.length === 0 ||
@@ -164,8 +166,11 @@ function reproduceAgents({
       ...parent2.genome.slice(crossoverPoint),
     ];
 
-    const isBornImmune =
+    const isEitherParentImmune =
       parent1.state === "recuperado" || parent2.state === "recuperado";
+
+    const isBornImmune =
+      isEitherParentImmune && Math.random() < bornImmunityChance;
 
     const mutatedGenome = childGenome.map((gene) => {
       if (Math.random() < MUTATION_RATE) {
