@@ -61,11 +61,11 @@ export function updateAgentStates({
       updatedAgent.color = "red";
       updatedAgent.infectionTimer = infectionDuration;
     } else if (updatedAgent.state === "infected") {
-      updatedAgent.infectionTimer -= 1;
+      updatedAgent.infectionTimer -= 0.5;
+      console.log(updatedAgent.infectionTimer);
       if (updatedAgent.infectionTimer <= 0) {
         updatedAgent.state = "recuperado";
         updatedAgent.color = "green";
-        updatedAgent.fitness += 3;
       }
     }
 
@@ -112,53 +112,28 @@ export function moveAgents({
   });
 }
 
-export function handleExtinction({
-  agents,
-  populationTarget,
-  nextAgentIdRef,
-  numRows,
-  numCols,
-  infectionDuration,
-}: {
-  agents: Agent[];
-  populationTarget: number;
-  nextAgentIdRef: React.MutableRefObject<number>;
-  numRows: number;
-  numCols: number;
-  infectionDuration: number;
-}): Agent[] | null {
-  if (agents.length > 0) {
-    return null;
-  }
-
-  const newAgents: Agent[] = [];
-  for (let i = 0; i < populationTarget; i++) {
-    newAgents.push(createAgent(nextAgentIdRef.current++, numRows, numCols));
-  }
-  for (let i = 0; i < 5; i++) {
-    if (newAgents[i]) {
-      newAgents[i].state = "infected";
-      newAgents[i].color = "red";
-      newAgents[i].infectionTimer = infectionDuration;
-    }
-  }
-  return newAgents;
-}
-
 function reproduceAgents({
   parents,
   numToCreate,
   nextAgentIdRef,
   numRows,
   numCols,
+  simulationStep,
+  analysisInterval,
 }: {
   parents: Agent[];
   numToCreate: number;
   nextAgentIdRef: React.MutableRefObject<number>;
   numRows: number;
   numCols: number;
+  simulationStep: number;
+  analysisInterval: number;
 }): Agent[] {
-  if (parents.length === 0 || numToCreate === 0) {
+  if (
+    parents.length === 0 ||
+    numToCreate === 0 ||
+    !(simulationStep % analysisInterval === 0)
+  ) {
     return [];
   }
 
@@ -215,9 +190,9 @@ export function processDeathAndReproduction({
   simulationStep,
   analysisInterval,
   enableReproduction,
-  onVirusDeath,
-  onNaturalDeath,
-  onReproduction,
+  setVirusDeathCount,
+  setNaturalDeathCount,
+  setReproductionCount,
 }: {
   agents: Agent[];
   deathRate: number;
@@ -229,12 +204,13 @@ export function processDeathAndReproduction({
   simulationStep: number;
   analysisInterval: number;
   enableReproduction: boolean;
-  onVirusDeath?: () => void;
-  onNaturalDeath?: () => void;
-  onReproduction?: (count: number) => void;
+  setVirusDeathCount: React.Dispatch<React.SetStateAction<number>>;
+  setNaturalDeathCount: React.Dispatch<React.SetStateAction<number>>;
+  setReproductionCount: React.Dispatch<React.SetStateAction<number>>;
 }): Agent[] {
-  let virusDeathCount = 0;
-  let naturalDeathCount = 0;
+  const initialInfectedCount = agents.filter(
+    (a) => a.state === "infected"
+  ).length;
 
   const survivingAgents = agents.filter((agent) => {
     if (
@@ -242,18 +218,29 @@ export function processDeathAndReproduction({
       Math.random() < viralDeathRate &&
       simulationStep % analysisInterval === 0
     ) {
-      virusDeathCount++;
+      console.log(agent);
       return false;
     }
-    if (Math.random() < deathRate) {
-      naturalDeathCount++;
+    if (Math.random() < deathRate && simulationStep % analysisInterval === 0) {
       return false;
     }
     return true;
   });
 
-  if (virusDeathCount > 0) onVirusDeath?.();
-  if (naturalDeathCount > 0) onNaturalDeath?.();
+  const remainingInfectedCount = survivingAgents.filter(
+    (a) => a.state === "infected"
+  ).length;
+
+  const virusDeaths = initialInfectedCount - remainingInfectedCount;
+  const naturalDeaths = agents.length - survivingAgents.length - virusDeaths;
+
+  if (virusDeaths > 0) {
+    setVirusDeathCount((prev) => prev + virusDeaths);
+  }
+
+  if (naturalDeaths > 0) {
+    setNaturalDeathCount((prev) => prev + naturalDeaths);
+  }
 
   if (!enableReproduction) {
     return survivingAgents;
@@ -269,10 +256,12 @@ export function processDeathAndReproduction({
     nextAgentIdRef,
     numRows,
     numCols,
+    analysisInterval,
+    simulationStep,
   });
 
-  if (numToCreate > 0) {
-    onReproduction?.(numToCreate);
+  if (numToCreate > 0 && simulationStep % analysisInterval === 0) {
+    setReproductionCount((prev) => prev + numToCreate);
   }
 
   return [...survivingAgents, ...children];

@@ -4,6 +4,8 @@ import React, { useState } from "react";
 import Grid from "@/components/grid";
 import { useSimulation } from "./hooks/useSimulation";
 import { caRuleOptions } from "./utils/caRules";
+import { globalAtoms } from "./atoms";
+import { useAtom } from "jotai";
 
 const POPULATION_SIZE = 150;
 
@@ -21,10 +23,13 @@ export default function Home() {
   const [virusDeaths, setVirusDeaths] = useState(0);
   const [naturalDeaths, setNaturalDeaths] = useState(0);
   const [reproductions, setReproductions] = useState(0);
+  const [deathCounterAtom] = useAtom(globalAtoms.virusDeathsAtom);
+  const [naturalDeathsAtom] = useAtom(globalAtoms.naturalDeathsAtom);
+  const [reproductionCountAtom] = useAtom(globalAtoms.reproductionCountAtom);
+
   const [enableReproduction, setEnableReproduction] = useState(true);
   const selectedRule =
     caRuleOptions.find((r) => r.id === selectedRuleId) || caRuleOptions[0];
-  const [initialAgentCountRef] = useState(agentCount);
 
   const {
     grid,
@@ -48,9 +53,6 @@ export default function Home() {
     infectionDuration,
     infectionContagiousRange: infectionContagiousRange,
     enableReproduction,
-    onVirusDeath: () => setVirusDeaths((v) => v + 1),
-    onNaturalDeath: () => setNaturalDeaths((v) => v + 1),
-    onReproduction: (count) => setReproductions((v) => v + count),
     setNaturalDeaths,
     setReproductions,
     setVirusDeaths,
@@ -96,21 +98,25 @@ export default function Home() {
     (a) => a.state === "suscetivel"
   ).length;
   const infectedsCount = agents.filter((a) => a.state === "infected").length;
+
   const recuperadosCount = agents.filter(
     (a) => a.state === "recuperado"
   ).length;
+
+  const totalDeaths = virusDeaths + naturalDeaths;
+  const currentPopulation = agents.length;
+
   const growthRate =
-    agents.length > 0
-      ? (
-          ((agents.length - initialAgentCountRef) / initialAgentCountRef) *
-          100
-        ).toFixed(1) + "%"
-      : "0%";
+    currentPopulation > 0
+      ? ((reproductions - totalDeaths) / currentPopulation) * 100
+      : 0;
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-12 bg-gray-950 text-white font-mono">
       <h1 className="text-5xl font-bold mb-8">
-        Simulação de Epidemia com Autómatos Celulares e AG
+        Simulação de Epidemia com Autómatos Celulares e AG verificar se a taxa
+        de morte natural é baseada no intervalo da analise, assim como a taxa de
+        reproducao
       </h1>
 
       <div className="w-full max-w-6xl bg-gray-900 p-6 rounded-lg border border-gray-700 mb-6">
@@ -283,22 +289,27 @@ export default function Home() {
           </div>
         </div>
         <div className="w-full max-w-6xl bg-gray-900 p-4 rounded-lg border border-gray-700 mb-6 grid grid-cols-4 gap-4 text-lg">
-          {/* ... existing stats ... */}
           <div>
             Mortes por Vírus:
-            <span className="text-red-500 ml-2">{virusDeaths}</span>
+            <span className="text-red-500 ml-2">{deathCounterAtom}</span>
           </div>
           <div>
             Mortes Naturais:
-            <span className="text-gray-400 ml-2">{naturalDeaths}</span>
+            <span className="text-gray-400 ml-2">{naturalDeathsAtom}</span>
           </div>
           <div>
             Reproduções:
-            <span className="text-blue-400 ml-2">{reproductions}</span>
+            <span className="text-blue-400 ml-2">{reproductionCountAtom}</span>
           </div>
           <div>
             Taxa de Crescimento:
-            <span className="text-green-400 ml-2">{growthRate}</span>
+            <span
+              className={
+                growthRate > 0 ? "text-green-500 ml-2" : "text-red-500 ml-2"
+              }
+            >
+              {growthRate.toFixed(2)}%
+            </span>
           </div>
         </div>
 
