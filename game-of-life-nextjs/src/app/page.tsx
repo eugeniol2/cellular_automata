@@ -1,91 +1,277 @@
 "use client";
 
-import React from "react";
-import { useGameOfLife } from "./hooks/useGameOfLife";
-import Grid from "@/components/grid";
+import React, { useState } from "react";
+
+import { useSimulation, UseSimulationProps } from "./hooks/useSimulation";
+import {
+  briansBrainStep,
+  dayAndNightStep,
+  highLifeStep,
+  seedsStep,
+  serviettesStep,
+} from "./utils/caRules";
+import { globalAtoms } from "./atoms";
+import { useAtom } from "jotai";
+import { PlayArrow, Stop, Replay } from "@mui/icons-material";
+
+import { InfectionFractalChart } from "./components/chart";
+import Grid from "./components/grid";
+import { Box, Button, Container, Typography } from "@mui/material";
+import { CustomDrawer } from "./components/DashBoardLayout/components/CustomDrawer";
+import theme from "./theme/theme";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { simulationFormSchema } from "./schema/simulationFormSchema";
+
+const caRules = {
+  highlife: { stepFn: highLifeStep },
+  dayandnight: { stepFn: dayAndNightStep },
+  seeds: { stepFn: seedsStep },
+  serviettes: { stepFn: serviettesStep },
+  briansbrain: { stepFn: briansBrainStep },
+} as const;
+
+export type CaRuleType = keyof typeof caRules;
+
+export interface SimulationFormValues {
+  executionTime: number;
+  caRule: CaRuleType;
+  initialPop: number;
+  popTarget: number;
+  contagionRange: number;
+  infectionDuration: number;
+  naturalDeathRate: number;
+  virusDeathRate: number;
+  bornImmuneChance: number;
+  enableReproduction: boolean;
+}
 
 export default function Home() {
-  const [numRows, setNumRows] = React.useState(30);
-  const [numCols, setNumCols] = React.useState(50);
-  const { grid, running, start, stop, reset, toggleCell } = useGameOfLife(
-    numRows,
-    numCols
-  );
+  const [virusDeathsAtom] = useAtom(globalAtoms.virusDeathsAtom);
+  const [naturalDeathsAtom] = useAtom(globalAtoms.naturalDeathsAtom);
+  const [reproductionCountAtom] = useAtom(globalAtoms.reproductionCountAtom);
 
-  const handleRowsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setNumRows(Math.max(5, Math.min(100, Number(e.target.value))));
-  };
-  const handleColsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setNumCols(Math.max(5, Math.min(100, Number(e.target.value))));
+  const [isDrawerOpen, setIsDrawerOpen] = useAtom(globalAtoms.isDrawerOpen);
+
+  const [simulationParams, setSimulationParams] = useState<UseSimulationProps>({
+    numRows: 50,
+    numCols: 80,
+    initialAgentCount: 100,
+    caRuleStepFn: caRules.highlife.stepFn,
+    deathRate: 0.1 / 100,
+    viralDeathRate: 10 / 100,
+    bornImmuneChance: 20 / 100,
+    populationTarget: 200,
+    infectionDuration: 25,
+    infectionContagiousRange: 3,
+    enableReproduction: true,
+    clock: 200,
+    analysisInterval: 2,
+  });
+
+  const { control, handleSubmit, formState } = useForm<SimulationFormValues>({
+    resolver: yupResolver(simulationFormSchema),
+    defaultValues: {
+      executionTime: simulationParams.clock,
+      caRule: "highlife" as CaRuleType,
+      initialPop: simulationParams.initialAgentCount,
+      popTarget: simulationParams.populationTarget,
+      contagionRange: simulationParams.infectionContagiousRange,
+      infectionDuration: simulationParams.infectionDuration,
+      naturalDeathRate: simulationParams.deathRate * 100,
+      virusDeathRate: simulationParams.viralDeathRate * 100,
+      bornImmuneChance: simulationParams.bornImmuneChance * 100,
+      enableReproduction: simulationParams.enableReproduction,
+    },
+    mode: "onChange",
+  });
+
+  const {
+    grid,
+    agents,
+    running,
+    start,
+    stop,
+    resetSimulation,
+    simulationStep,
+    avgFitnessHistory,
+    dimensionHistory,
+  } = useSimulation({
+    ...simulationParams,
+  });
+
+  const onSubmit = (data: SimulationFormValues) => {
+    console.log(data);
+    if (running) {
+      stop();
+    }
+
+    setSimulationParams((prev) => ({
+      ...prev,
+      initialAgentCount: data.initialPop,
+      caRuleStepFn: caRules[data.caRule].stepFn,
+      deathRate: data.naturalDeathRate / 100,
+      viralDeathRate: data.virusDeathRate / 100,
+      bornImmuneChance: data.bornImmuneChance / 100,
+      populationTarget: data.popTarget,
+      infectionDuration: data.infectionDuration,
+      infectionContagiousRange: data.contagionRange,
+      enableReproduction: data.enableReproduction,
+      clock: data.executionTime,
+    }));
+
+    resetSimulation();
+    start();
   };
 
-  React.useEffect(() => {
-    reset();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [numRows, numCols]);
+  const handleDrawerToggle = () => {
+    setIsDrawerOpen(!isDrawerOpen);
+  };
+
+  const suscetiveisCount = agents.filter(
+    (a) => a.state === "suscetivel"
+  ).length;
+  const infectedsCount = agents.filter((a) => a.state === "infected").length;
+
+  const recuperadosCount = agents.filter(
+    (a) => a.state === "recuperado"
+  ).length;
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-12 bg-gray-950 text-white">
-      <h1 className="text-4xl font-bold mb-8">Conway&apos;s Game of Life</h1>
-      <div className="mb-6 flex space-x-4">
-        <div className="flex items-center space-x-2">
-          <label htmlFor="rows" className="text-sm">
-            Rows:
-          </label>
-          <input
-            id="rows"
-            type="number"
-            min={5}
-            max={100}
-            value={numRows}
-            onChange={handleRowsChange}
-            disabled={running}
-            className="w-16 px-2 py-1 rounded bg-gray-800 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-        <div className="flex items-center space-x-2">
-          <label htmlFor="cols" className="text-sm">
-            Cols:
-          </label>
-          <input
-            id="cols"
-            type="number"
-            min={5}
-            max={100}
-            value={numCols}
-            onChange={handleColsChange}
-            disabled={running}
-            className="w-16 px-2 py-1 rounded bg-gray-800 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-        <button
-          onClick={running ? stop : start}
-          className={`px-4 py-2 rounded font-semibold transition-colors duration-200 ${
-            running
-              ? "bg-red-600 hover:bg-red-700 text-white"
-              : "bg-green-600 hover:bg-green-700 text-white"
-          }`}
+    <Container
+      component="main"
+      maxWidth="xl"
+      sx={{
+        py: 8,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        "& > *:not(:last-child)": { mb: 8 },
+      }}
+    >
+      <Box sx={{ textAlign: "center", mb: 4 }}>
+        <Typography variant="h3" gutterBottom>
+          Simulação de Epidemia com Autómatos Celulares e AG
+        </Typography>
+      </Box>
+      <Typography variant="h5" gutterBottom>
+        Evolução da Dimensão Fractal
+      </Typography>
+      <InfectionFractalChart data={dimensionHistory} stepInterval={5} />
+      <Box sx={{ mb: 4 }}>
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: "repeat(4, 1fr)",
+            gap: 2,
+          }}
+        >
+          <Box>
+            <Typography variant="body2">Mortes por virus:</Typography>
+            <Typography variant="h4" color="error.main">
+              {virusDeathsAtom}
+            </Typography>
+          </Box>
+          <Box>
+            <Typography variant="body2">Mortes naturais:</Typography>
+            <Typography variant="h4" color={theme.palette.warning.main}>
+              {naturalDeathsAtom}
+            </Typography>
+          </Box>
+          <Box>
+            <Typography variant="body2">Reproduções</Typography>
+            <Typography variant="h4">{reproductionCountAtom}</Typography>
+          </Box>
+          <Box>
+            <Typography variant="body2" color={theme.palette.secondary.light}>
+              Dimensão Fractal:
+            </Typography>
+            <Typography variant="h4" color={theme.palette.secondary.light}>
+              {dimensionHistory.length > 0
+                ? dimensionHistory[dimensionHistory.length - 1].toFixed(3)
+                : "N/A"}
+            </Typography>
+          </Box>
+        </Box>
+      </Box>
+      <Box sx={{ mb: 4 }}>
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: "repeat(5, 1fr)",
+            gap: 2,
+          }}
+        >
+          <Box>
+            <Typography variant="body2">Suscetíveis:</Typography>
+            <Typography variant="h6">{suscetiveisCount}</Typography>
+          </Box>
+          <Box>
+            <Typography variant="body2">Infectados:</Typography>
+            <Typography variant="h6" color="error.main">
+              {infectedsCount}
+            </Typography>
+          </Box>
+          <Box>
+            <Typography variant="body2">Recuperados:</Typography>
+            <Typography variant="h6" color="success.main">
+              {recuperadosCount}
+            </Typography>
+          </Box>
+          <Box>
+            <Typography variant="body2">Passo da Simulação:</Typography>
+            <Typography variant="h6">{simulationStep}</Typography>
+          </Box>
+          <Box>
+            <Typography variant="body2">
+              Fitness Média (Resistência):
+            </Typography>
+            <Typography variant="h6">
+              {avgFitnessHistory.length > 0
+                ? avgFitnessHistory[avgFitnessHistory.length - 1].toFixed(1)
+                : "N/A"}
+            </Typography>
+          </Box>
+        </Box>
+      </Box>
+      <Box sx={{ display: "flex", gap: 2 }}>
+        <Button
+          variant="contained"
+          color={running ? "error" : "secondary"}
+          startIcon={running ? <Stop /> : <PlayArrow />}
+          onClick={running ? stop : handleSubmit(onSubmit)}
+          fullWidth
         >
           {running ? "Stop" : "Start"}
-        </button>
-        <button
-          onClick={reset}
+        </Button>
+        <Button
+          variant="outlined"
+          color="inherit"
+          startIcon={<Replay />}
+          onClick={resetSimulation}
           disabled={running}
-          className="px-4 py-2 rounded font-semibold bg-gray-600 hover:bg-gray-700 text-white transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          fullWidth
         >
-          Reset / Randomize
-        </button>
-      </div>
-      <Grid
-        grid={grid}
-        toggleCell={toggleCell}
-        numRows={numRows}
-        numCols={numCols}
+          Reset
+        </Button>
+      </Box>
+
+      <Box sx={{ display: "flex", justifyContent: "center", mb: 4 }}>
+        <Grid
+          grid={grid}
+          numRows={simulationParams.numRows}
+          numCols={simulationParams.numCols}
+          agents={agents}
+        />
+      </Box>
+      <CustomDrawer
+        control={control}
+        drawerToggleFunction={handleDrawerToggle}
+        isOpen={isDrawerOpen}
+        drawerWidth={600}
+        running={running}
+        formState={formState}
       />
-      <p className="mt-8 text-sm text-gray-400">
-        Click on cells to toggle their state (alive/dead) when the simulation is
-        stopped.
-      </p>
-    </main>
+    </Container>
   );
 }
