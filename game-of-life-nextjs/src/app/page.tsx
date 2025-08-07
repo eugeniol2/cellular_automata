@@ -16,7 +16,7 @@ import { PlayArrow, Stop, Replay } from "@mui/icons-material";
 
 import { InfectionFractalChart } from "./components/chart";
 import Grid from "./components/grid";
-import { Alert, Box, Button, Container, Typography } from "@mui/material";
+import { Box, Button, Container, Typography } from "@mui/material";
 import { CustomDrawer } from "./components/DashBoardLayout/components/CustomDrawer";
 import theme from "./theme/theme";
 import { useForm } from "react-hook-form";
