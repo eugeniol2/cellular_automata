@@ -16,7 +16,6 @@ export const InfectionFractalChart = ({
   data: number[];
   stepInterval?: number;
 }) => {
-  console.log(data);
   const filteredData = data
     .map((value, index) => ({ step: index, dimension: value }))
     .filter(

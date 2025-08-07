@@ -1,4 +1,5 @@
 import { Agent, createAgent, GENOME_LENGTH } from "@/app/agents/agent";
+import { AgentSpatialGrid } from "./spacialGrid";
 
 const MUTATION_RATE = 0.15;
 
@@ -16,11 +17,22 @@ export function processInfection({
     return newlyInfected;
   }
 
+  const infectedGrid = new AgentSpatialGrid(neighborRadius * 2);
+  for (const infector of infected) {
+    infectedGrid.add(infector);
+  }
+
   const susceptibles = agents.filter((a) => a.state === "suscetivel");
 
   for (const susceptible of susceptibles) {
+    const nearbyInfected = infectedGrid.getNearby(susceptible, neighborRadius);
+
+    if (nearbyInfected.length === 0) {
+      continue;
+    }
+
     let infectedNeighbors = 0;
-    for (const infector of infected) {
+    for (const infector of nearbyInfected) {
       const dist = Math.max(
         Math.abs(susceptible.row - infector.row),
         Math.abs(susceptible.col - infector.col)
@@ -85,7 +97,13 @@ export function moveAgents({
   numRows: number;
   numCols: number;
 }): Agent[] {
-  const agentPositions = new Set(agents.map((a) => `${a.row},${a.col}`));
+  const occupancyGrid: number[][] = Array(numRows)
+    .fill(0)
+    .map(() => Array(numCols).fill(0));
+
+  for (const agent of agents) {
+    occupancyGrid[agent.row][agent.col] = 1;
+  }
 
   return agents.map((agent) => {
     const dx = Math.floor(Math.random() * 3) - 1;
@@ -95,19 +113,13 @@ export function moveAgents({
     const newRow = (agent.row + dx + numRows) % numRows;
     const newCol = (agent.col + dy + numCols) % numCols;
 
-    const isNextCellPositionAvailable = grid[newRow]?.[newCol] === 1;
-    if (isNextCellPositionAvailable) {
+    if (grid[newRow]?.[newCol] === 1 || occupancyGrid[newRow][newCol] === 1) {
       return agent;
     }
 
-    const newPosKey = `${newRow},${newCol}`;
-    const isNextCellOccupiedByAnotherAgent = agentPositions.has(newPosKey);
-    if (isNextCellOccupiedByAnotherAgent) {
-      return agent;
-    }
+    occupancyGrid[agent.row][agent.col] = 0;
+    occupancyGrid[newRow][newCol] = 1;
 
-    agentPositions.delete(`${agent.row},${agent.col}`);
-    agentPositions.add(newPosKey);
     return { ...agent, row: newRow, col: newCol };
   });
 }
