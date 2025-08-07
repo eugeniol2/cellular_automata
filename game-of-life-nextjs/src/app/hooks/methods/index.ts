@@ -62,7 +62,6 @@ export function updateAgentStates({
       updatedAgent.infectionTimer = infectionDuration;
     } else if (updatedAgent.state === "infected") {
       updatedAgent.infectionTimer -= 0.5;
-      console.log(updatedAgent.infectionTimer);
       if (updatedAgent.infectionTimer <= 0) {
         updatedAgent.state = "recuperado";
         updatedAgent.color = "green";
@@ -203,7 +202,7 @@ export function processDeathAndReproduction({
   numCols,
   viralDeathRate,
   simulationStep,
-  analysisInterval,
+  analysisInterval = 2,
   enableReproduction,
   setVirusDeathCount,
   setNaturalDeathCount,
@@ -235,7 +234,6 @@ export function processDeathAndReproduction({
       Math.random() < viralDeathRate &&
       simulationStep % analysisInterval === 0
     ) {
-      console.log(agent);
       return false;
     }
     if (Math.random() < deathRate && simulationStep % analysisInterval === 0) {

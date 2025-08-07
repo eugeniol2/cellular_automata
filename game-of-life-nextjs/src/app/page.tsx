@@ -6,6 +6,7 @@ import { useSimulation } from "./hooks/useSimulation";
 import { caRuleOptions } from "./utils/caRules";
 import { globalAtoms } from "./atoms";
 import { useAtom } from "jotai";
+import { InfectionFractalChart } from "@/components/chart";
 
 const POPULATION_SIZE = 150;
 
@@ -14,13 +15,14 @@ export default function Home() {
   const [numCols, setNumCols] = useState(80);
   const [agentCount, setAgentCount] = useState(POPULATION_SIZE);
   const [selectedRuleId, setSelectedRuleId] = useState(caRuleOptions[0].id);
-  const [deathRate, setDeathRate] = useState(0.01);
+  const [deathRate, setDeathRate] = useState(0.05);
   const [viralDeathRate, setViralDeathRate] = useState(0.1);
   const [infectionContagiousRange, setInfectionContagiousRange] = useState(3);
-  const [analysisInterval, setAnalysisInterval] = useState(10);
   const [populationTarget, setPopulationTarget] = useState(150);
-  const [infectionDuration, setInfectionDuration] = useState(70);
+  const [infectionDuration, setInfectionDuration] = useState(20);
   const [bornImmuneChance, setBornImmuneChance] = useState(0.3);
+  const [executionSpeed, setExecutionSpeed] = useState(100);
+
   const [deathCounterAtom] = useAtom(globalAtoms.virusDeathsAtom);
   const [naturalDeathsAtom] = useAtom(globalAtoms.naturalDeathsAtom);
   const [reproductionCountAtom] = useAtom(globalAtoms.reproductionCountAtom);
@@ -46,56 +48,96 @@ export default function Home() {
     caRuleStepFn: selectedRule.stepFn,
     deathRate,
     viralDeathRate,
-    analysisInterval,
     populationTarget,
     infectionDuration,
     infectionContagiousRange: infectionContagiousRange,
     enableReproduction,
     bornImmuneChance,
+    clock: executionSpeed,
   });
 
-  const handleRowsChange = (e: React.ChangeEvent<HTMLInputElement>) =>
-    setNumRows(Number(e.target.value));
+  const clamp = (value: number, min: number, max: number) =>
+    Math.max(min, Math.min(max, value));
 
-  const handleColsChange = (e: React.ChangeEvent<HTMLInputElement>) =>
-    setNumCols(Number(e.target.value));
+  const handleRowsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = Number(e.target.value);
+    value = clamp(value, 10, 100);
+    setNumRows(value);
+    e.target.value = value.toString();
+  };
 
-  const handleAgentCountChange = (e: React.ChangeEvent<HTMLInputElement>) =>
-    setAgentCount(Number(e.target.value));
+  const handleColsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = Number(e.target.value);
+    value = clamp(value, 10, 100);
+    setNumCols(value);
+    e.target.value = value.toString();
+  };
+  const handleAgentCountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = Number(e.target.value);
+    value = clamp(value, 10, 500);
+    setAgentCount(value);
+    e.target.value = value.toString();
+  };
 
   const handleDeathRateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setDeathRate(Number(value));
+    let value = Number(e.target.value);
+    value = clamp(value, 0, 100);
+    setDeathRate(value / 100);
+    e.target.value = value.toString();
   };
 
   const handleViralDeathRateChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
-    const value = Math.min(100, Math.max(0, Number(e.target.value)) / 100);
-    setViralDeathRate(value);
+    let value = Number(e.target.value);
+    value = clamp(value, 0, 100);
+    setViralDeathRate(value / 100);
+    e.target.value = value.toString();
   };
-
-  const handleAnalysisIntervalChange = (
+  const handleExecutionTimeChange = (
     e: React.ChangeEvent<HTMLInputElement>
-  ) => setAnalysisInterval(Number(e.target.value));
+  ) => {
+    let value = Number(e.target.value);
+    value = clamp(value, 1, 1000);
+    setExecutionSpeed(value);
+    e.target.value = value.toString();
+  };
 
   const handlePopulationTargetChange = (
     e: React.ChangeEvent<HTMLInputElement>
-  ) => setPopulationTarget(Number(e.target.value));
+  ) => {
+    let value = Number(e.target.value);
+    value = clamp(value, 10, 1000);
+    setPopulationTarget(value);
+    e.target.value = value.toString();
+  };
 
   const handleInfectionDurationChange = (
     e: React.ChangeEvent<HTMLInputElement>
-  ) => setInfectionDuration(Number(e.target.value));
+  ) => {
+    let value = Number(e.target.value);
+    value = clamp(value, 1, 1000);
+    setInfectionDuration(value);
+    e.target.value = value.toString();
+  };
 
   const handleImmuneBornChanceChange = (
     e: React.ChangeEvent<HTMLInputElement>
   ) => {
-    const value = Math.min(1, Math.max(0, Number(e.target.value) / 100));
-    setBornImmuneChance(value);
+    let value = Number(e.target.value);
+    value = clamp(value, 0, 100);
+    setBornImmuneChance(value / 100);
+    e.target.value = value.toString();
   };
 
-  const handleInfectionRangeChange = (e: React.ChangeEvent<HTMLInputElement>) =>
-    setInfectionContagiousRange(Number(e.target.value));
+  const handleInfectionRangeChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    let value = Number(e.target.value);
+    value = clamp(value, 1, 10);
+    setInfectionContagiousRange(value);
+    e.target.value = value.toString();
+  };
 
   const suscetiveisCount = agents.filter(
     (a) => a.state === "suscetivel"
@@ -116,30 +158,38 @@ export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-12 bg-gray-950 text-white font-mono">
       <h1 className="text-5xl font-bold mb-8">
-        Simulação de Epidemia com Autómatos Celulares e AG verificar se a taxa
-        de morte natural é baseada no intervalo da analise, assim como a taxa de
-        reproducao
+        Simulação de Epidemia com Autómatos Celulares e AG
       </h1>
+      <div className="w-full max-w-6xl bg-gray-900 p-4 rounded-lg border border-gray-700 mb-6">
+        <h2 className="text-xl font-semibold mb-4">
+          Evolução da Dimensão Fractal
+        </h2>
+        <InfectionFractalChart data={dimensionHistory} stepInterval={5} />
+      </div>
 
       <div className="w-full max-w-6xl bg-gray-900 p-6 rounded-lg border border-gray-700 mb-6">
         <div className="grid grid-cols-4 gap-4 mb-4">
           <div className="flex flex-col">
             <label htmlFor="analysis-interval" className="text-sm mb-1">
-              Intervalo de Análise
+              Tempo de execução (clock)
             </label>
-            <input
-              id="analysis-interval"
-              type="number"
-              min="1"
-              value={analysisInterval}
-              onChange={handleAnalysisIntervalChange}
-              disabled={running}
-              className="w-full px-3 py-2 rounded bg-gray-800 border border-gray-600 focus:ring-2 focus:ring-blue-500"
-            />
+            <div className="relative">
+              <input
+                id="execution-time"
+                type="number"
+                min="1"
+                max="1000"
+                value={executionSpeed}
+                onChange={handleExecutionTimeChange}
+                disabled={running}
+                className="w-full px-3 py-2 rounded bg-gray-800 border border-gray-600 focus:ring-2 focus:ring-blue-500"
+              />
+              <span className="absolute right-3 top-2 text-gray-400">MS</span>
+            </div>
           </div>
           <div className="flex flex-col">
             <label htmlFor="death-rate" className="text-sm mb-1">
-              Taxa de Morte(%)
+              Taxa de Morte natural(%)
             </label>
             <div className="relative">
               <input
@@ -148,7 +198,7 @@ export default function Home() {
                 min="0"
                 max="100"
                 step="0.01"
-                value={deathRate}
+                value={deathRate * 100}
                 onChange={handleDeathRateChange}
                 disabled={running}
                 className="w-full px-3 py-2 rounded bg-gray-800 border border-gray-600 focus:ring-2 focus:ring-blue-500 pr-10"
@@ -292,7 +342,7 @@ export default function Home() {
 
           <div className="flex flex-col">
             <label htmlFor="agent-count" className="text-sm mb-1">
-              População
+              População inicial
             </label>
             <input
               id="agent-count"
