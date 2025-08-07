@@ -93,7 +93,7 @@ export default function DashboardLayout({
               <IconButton
                 size="large"
                 color="inherit"
-                href="https://github.com/eugeniol2"
+                href="https://github.com/eugeniol2/cellular_automata"
                 target="_blank"
                 rel="noopener noreferrer"
               >
