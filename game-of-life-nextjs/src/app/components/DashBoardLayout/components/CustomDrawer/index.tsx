@@ -126,10 +126,14 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({
         </IconButton>
       </Box>
 
-      <Box sx={{ p: 2, color: "white" }}>
-        <Typography variant="subtitle1" gutterBottom sx={{ mt: 2 }}>
-          Execution Settings
-        </Typography>
+      <Box
+        flex={1}
+        display="flex"
+        flexDirection="column"
+        justifyContent="space-between"
+        gap="16px"
+        sx={{ p: 2, my: "32px", color: "white" }}
+      >
         <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
           <TextField
             label="Execution time (ms)"
@@ -163,9 +167,6 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({
           </FormControl>
         </Box>
 
-        <Typography variant="subtitle1" gutterBottom sx={{ mt: 3 }}>
-          Population Settings
-        </Typography>
         <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
           <TextField
             label="Initial Population"
@@ -192,9 +193,6 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({
           />
         </Box>
 
-        <Typography variant="subtitle1" gutterBottom sx={{ mt: 3 }}>
-          Grid Settings
-        </Typography>
         <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
           <TextField
             label="Rows"
@@ -221,9 +219,6 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({
           />
         </Box>
 
-        <Typography variant="subtitle1" gutterBottom sx={{ mt: 3 }}>
-          Infection Settings
-        </Typography>
         <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
           <TextField
             label="Contagion Distance"
@@ -250,9 +245,6 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({
           />
         </Box>
 
-        <Typography variant="subtitle1" gutterBottom sx={{ mt: 3 }}>
-          Mortality Settings
-        </Typography>
         <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
           <TextField
             label="Natural Death Rate (%)"
@@ -285,9 +277,6 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({
           />
         </Box>
 
-        <Typography variant="subtitle1" gutterBottom sx={{ mt: 3 }}>
-          Immunity Settings
-        </Typography>
         <Box sx={{ display: "grid", gridTemplateColumns: "1fr", gap: 2 }}>
           <TextField
             label="Born Immune Chance (%)"
@@ -303,12 +292,24 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({
             size="small"
             sx={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
           />
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={enableReproduction}
+                onChange={(e) => setEnableReproduction(e.target.checked)}
+                disabled={running}
+                color="primary"
+              />
+            }
+            label="Enable Reproduction"
+            sx={{ mt: 2, color: "white" }}
+          />
         </Box>
 
-        <Box sx={{ mt: 3, display: "flex", gap: 2 }}>
+        <Box sx={{ display: "flex", gap: 2 }}>
           <Button
             variant="contained"
-            color={running ? "error" : "success"}
+            color={running ? "error" : "secondary"}
             startIcon={running ? <Stop /> : <PlayArrow />}
             onClick={running ? stop : start}
             fullWidth
@@ -326,19 +327,6 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({
             Reset
           </Button>
         </Box>
-
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={enableReproduction}
-              onChange={(e) => setEnableReproduction(e.target.checked)}
-              disabled={running}
-              color="primary"
-            />
-          }
-          label="Enable Reproduction"
-          sx={{ mt: 2, color: "white" }}
-        />
       </Box>
     </Drawer>
   );
