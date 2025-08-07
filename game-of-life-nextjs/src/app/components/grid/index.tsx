@@ -1,5 +1,7 @@
 import { Agent } from "@/app/agents/agent";
 import React from "react";
+import { Box, styled } from "@mui/material";
+import theme from "@/app/theme/theme";
 
 interface GridProps {
   grid: number[][];
@@ -12,27 +14,52 @@ interface GridProps {
 const COLOR_DEAD = "rgb(17 24 39)";
 const COLOR_ALIVE = "rgb(55 65 81)";
 
+const GridContainer = styled(Box)(({ theme }) => ({
+  display: "grid",
+  border: "1px solid",
+  borderColor: theme.palette.divider,
+  position: "relative",
+  boxShadow: theme.shadows[24],
+  backgroundColor: theme.palette.background.paper,
+  width: "fit-content",
+  height: "fit-content",
+}));
+
+const GridCell = styled(Box)({
+  borderTop: "1px solid",
+  borderLeft: "1px solid",
+  borderColor: "divider",
+  border: "none",
+  backgroundColor: COLOR_DEAD,
+});
+
+const AgentDot = styled(Box)({
+  position: "absolute",
+  borderRadius: "50%",
+  transition: "background-color 200ms ease",
+  border: `1px solid ${theme.palette.common.black}`,
+  zIndex: 10,
+});
+
 const Grid: React.FC<GridProps> = ({
   grid,
   agents,
   numRows,
   numCols,
-  cellSize = 12,
+  cellSize = 10,
 }) => {
   return (
-    <div
-      className="inline-grid border border-gray-700 relative shadow-2xl"
-      style={{
+    <GridContainer
+      sx={{
         gridTemplateColumns: `repeat(${numCols}, ${cellSize}px)`,
         gridTemplateRows: `repeat(${numRows}, ${cellSize}px)`,
       }}
     >
       {grid.map((rows, i) =>
         rows.map((cellState, k) => (
-          <div
+          <GridCell
             key={`cell-${i}-${k}`}
-            className="border-t border-l border-gray-800"
-            style={{
+            sx={{
               width: `${cellSize}px`,
               height: `${cellSize}px`,
               backgroundColor: cellState === 1 ? COLOR_ALIVE : COLOR_DEAD,
@@ -42,22 +69,19 @@ const Grid: React.FC<GridProps> = ({
       )}
 
       {agents.map((agent) => (
-        <div
+        <AgentDot
           key={`agent-${agent.id}`}
-          className="absolute rounded-full transition-colors duration-200"
-          style={{
+          sx={{
             width: `${cellSize * 0.8}px`,
             height: `${cellSize * 0.8}px`,
             top: `${agent.row * cellSize + cellSize * 0.1}px`,
             left: `${agent.col * cellSize + cellSize * 0.1}px`,
             backgroundColor: agent.color,
-            border: "1px solid rgba(0,0,0,0.5)",
-            zIndex: 10,
           }}
           title={`Agente ${agent.id} (${agent.state})`}
         />
       ))}
-    </div>
+    </GridContainer>
   );
 };
 

@@ -9,7 +9,7 @@ import {
   processDeathAndReproduction,
   processInfection,
   updateAgentStates,
-} from "./methods";
+} from "../utils/methods";
 import { useAtom } from "jotai";
 
 export type CARuleStepFn = (

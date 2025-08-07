@@ -8,9 +8,12 @@ const naturalDeathsAtom = atom<number>(0);
 const reproductionCountAtom = atom<number>(0);
 const infectionHistoryAtom = atom<number[]>([]);
 
+const isDrawerOpen = atom<boolean>(false);
+
 export const globalAtoms = {
   virusDeathsAtom,
   naturalDeathsAtom,
   reproductionCountAtom,
   infectionHistoryAtom,
+  isDrawerOpen,
 };
