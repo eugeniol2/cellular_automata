@@ -1,4 +1,3 @@
-// validationSchema.ts
 import * as yup from "yup";
 import { CaRuleType } from "../page";
 

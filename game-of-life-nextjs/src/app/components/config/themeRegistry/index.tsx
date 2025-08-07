@@ -1,4 +1,3 @@
-// src/components/ThemeRegistry/ThemeRegistry.tsx
 "use client";
 
 import createCache from "@emotion/cache";

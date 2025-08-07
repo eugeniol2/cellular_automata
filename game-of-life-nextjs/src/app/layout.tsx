@@ -14,7 +14,6 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 export const metadata: Metadata = {
-  // Note o "m" minúsculo e o tipo Metadata
   title: "Simulação de Epidemia com Autómatos Celulares e AG",
   description:
     "modelo híbrido para simular a dinâmica de doenças infecciosas, integrando a Modelagem Baseada em Agentes (ABM) com um ambiente de Autômatos Celulares (AC)",

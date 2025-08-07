@@ -16,7 +16,7 @@ import { PlayArrow, Stop, Replay } from "@mui/icons-material";
 
 import { InfectionFractalChart } from "./components/chart";
 import Grid from "./components/grid";
-import { Box, Button, Container, Typography } from "@mui/material";
+import { Alert, Box, Button, Container, Typography } from "@mui/material";
 import { CustomDrawer } from "./components/DashBoardLayout/components/CustomDrawer";
 import theme from "./theme/theme";
 import { useForm } from "react-hook-form";
@@ -98,7 +98,7 @@ export default function Home() {
     analysisInterval: 1,
   });
 
-  const { control, handleSubmit, formState, reset } =
+  const { control, formState, reset, getValues } =
     useForm<SimulationFormValues>({
       resolver: yupResolver(simulationFormSchema),
       defaultValues: {
@@ -116,6 +116,8 @@ export default function Home() {
       mode: "onChange",
     });
 
+  const { isValid } = formState;
+
   const {
     grid,
     agents,
@@ -130,11 +132,12 @@ export default function Home() {
     ...simulationParams,
   });
 
-  const onSubmit = (data: SimulationFormValues) => {
-    console.log(data);
+  const applySettingsAndReset = () => {
     if (running) {
       stop();
     }
+
+    const data = getValues();
 
     setSimulationParams((prev) => ({
       ...prev,
@@ -149,9 +152,6 @@ export default function Home() {
       enableReproduction: data.enableReproduction,
       clock: data.executionTime,
     }));
-
-    resetSimulation();
-    start();
   };
 
   const resetToDefaults = () => {
@@ -166,7 +166,16 @@ export default function Home() {
   };
 
   const handleDrawerToggle = () => {
-    setIsDrawerOpen(!isDrawerOpen);
+    if (isDrawerOpen) {
+      if (isValid) {
+        applySettingsAndReset();
+        setIsDrawerOpen(false);
+      } else {
+        alert("Formulário inválido. Corrija os erros para continuar.");
+      }
+    } else {
+      setIsDrawerOpen(true);
+    }
   };
 
   const suscetiveisCount = agents.filter(
@@ -280,16 +289,16 @@ export default function Home() {
           variant="contained"
           color={running ? "error" : "secondary"}
           startIcon={running ? <Stop /> : <PlayArrow />}
-          onClick={running ? stop : handleSubmit(onSubmit)}
+          onClick={running ? stop : start}
           fullWidth
         >
-          {running ? "Stop" : "Start"}
+          {running ? "Parar" : "Iniciar"}
         </Button>
         <Button
           variant="outlined"
           color="inherit"
           startIcon={<Replay />}
-          onClick={resetSimulation}
+          onClick={resetToDefaults}
           disabled={running}
           fullWidth
         >

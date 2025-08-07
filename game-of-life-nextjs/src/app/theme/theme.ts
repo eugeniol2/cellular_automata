@@ -1,4 +1,3 @@
-// src/types/mui.d.ts (or a similar location)
 import "@mui/material/styles";
 
 import { createTheme } from "@mui/material/styles";
