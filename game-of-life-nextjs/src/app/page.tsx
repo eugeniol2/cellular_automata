@@ -56,7 +56,7 @@ export default function Home() {
   const DEFAULT_FORM_VALUES: SimulationFormValues = {
     executionTime: 200,
     caRule: "highlife",
-    initialPop: 100,
+    initialPop: 200,
     popTarget: 200,
     contagionRange: 3,
     infectionDuration: 25,
@@ -69,7 +69,7 @@ export default function Home() {
   const DEFAULT_SIMULATION_PARAMS: UseSimulationProps = {
     numRows: 50,
     numCols: 80,
-    initialAgentCount: 100,
+    initialAgentCount: 200,
     caRuleStepFn: caRules.highlife.stepFn,
     deathRate: 0.1 / 100,
     viralDeathRate: 10 / 100,
@@ -85,7 +85,7 @@ export default function Home() {
   const [simulationParams, setSimulationParams] = useState<UseSimulationProps>({
     numRows: 50,
     numCols: 80,
-    initialAgentCount: 100,
+    initialAgentCount: 200,
     caRuleStepFn: caRules.highlife.stepFn,
     deathRate: 0.1 / 100,
     viralDeathRate: 10 / 100,
@@ -160,8 +160,7 @@ export default function Home() {
     setSimulationParams(DEFAULT_SIMULATION_PARAMS);
     reset({
       ...DEFAULT_FORM_VALUES,
-      // react-hook-form needs to track all fields
-      contagionRange: 3, // Fix typo from your form (contagion vs contagion)
+      contagionRange: 3,
     });
     resetSimulation();
   };

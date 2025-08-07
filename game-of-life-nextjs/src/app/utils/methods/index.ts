@@ -214,7 +214,7 @@ export function processDeathAndReproduction({
   numCols,
   viralDeathRate,
   simulationStep,
-  analysisInterval = 2,
+  analysisInterval = 1,
   enableReproduction,
   setVirusDeathCount,
   setNaturalDeathCount,
