@@ -79,7 +79,7 @@ export default function Home() {
     infectionContagiousRange: 3,
     enableReproduction: true,
     clock: 200,
-    analysisInterval: 2,
+    analysisInterval: 1,
   };
 
   const [simulationParams, setSimulationParams] = useState<UseSimulationProps>({
@@ -95,7 +95,7 @@ export default function Home() {
     infectionContagiousRange: 3,
     enableReproduction: true,
     clock: 200,
-    analysisInterval: 2,
+    analysisInterval: 1,
   });
 
   const { control, handleSubmit, formState, reset } =
