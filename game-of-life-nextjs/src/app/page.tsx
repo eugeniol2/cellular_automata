@@ -162,7 +162,7 @@ export default function Home() {
         <Box
           sx={{
             display: "grid",
-            gridTemplateColumns: "repeat(3, 1fr)",
+            gridTemplateColumns: "repeat(4, 1fr)",
             gap: 2,
           }}
         >
@@ -182,13 +182,23 @@ export default function Home() {
             <Typography variant="body2">Reproduções</Typography>
             <Typography variant="h4">{reproductionCountAtom}</Typography>
           </Box>
+          <Box>
+            <Typography variant="body2" color={theme.palette.secondary.light}>
+              Dimensão Fractal:
+            </Typography>
+            <Typography variant="h4" color={theme.palette.secondary.light}>
+              {dimensionHistory.length > 0
+                ? dimensionHistory[dimensionHistory.length - 1].toFixed(3)
+                : "N/A"}
+            </Typography>
+          </Box>
         </Box>
       </Box>
       <Box sx={{ mb: 4 }}>
         <Box
           sx={{
             display: "grid",
-            gridTemplateColumns: "repeat(6, 1fr)",
+            gridTemplateColumns: "repeat(5, 1fr)",
             gap: 2,
           }}
         >
@@ -213,18 +223,12 @@ export default function Home() {
             <Typography variant="h6">{simulationStep}</Typography>
           </Box>
           <Box>
-            <Typography variant="body2">Fitness Média:</Typography>
+            <Typography variant="body2">
+              Fitness Média (Resistência):
+            </Typography>
             <Typography variant="h6">
               {avgFitnessHistory.length > 0
                 ? avgFitnessHistory[avgFitnessHistory.length - 1].toFixed(1)
-                : "N/A"}
-            </Typography>
-          </Box>
-          <Box>
-            <Typography variant="body2">Dimensão Fractal:</Typography>
-            <Typography variant="h6">
-              {dimensionHistory.length > 0
-                ? dimensionHistory[dimensionHistory.length - 1].toFixed(3)
                 : "N/A"}
             </Typography>
           </Box>
