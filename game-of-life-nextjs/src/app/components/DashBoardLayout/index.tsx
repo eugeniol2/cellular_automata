@@ -93,7 +93,7 @@ export default function DashboardLayout({
               <IconButton
                 size="large"
                 color="inherit"
-                href="https://github.com/your-username"
+                href="https://github.com/eugeniol2"
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -102,7 +102,7 @@ export default function DashboardLayout({
               <IconButton
                 size="large"
                 color="inherit"
-                href="https://www.linkedin.com/in/your-profile"
+                href="https://www.linkedin.com/in/eugenio-dorneles-araujo/"
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -112,7 +112,8 @@ export default function DashboardLayout({
                 color="inherit"
                 startIcon={<DescriptionIcon />}
                 component="a"
-                href="/path/to/your/documentation.pdf"
+                href="src/app/assets/A Hybrid Agent-Based and Cellular Automata Model for Simulating Epidemic Dynamics and Spatial Complexity.pdf"
+                download="Artigo-Projeto-Epidemiologia.pdf"
                 target="_blank"
                 rel="noopener noreferrer"
               >

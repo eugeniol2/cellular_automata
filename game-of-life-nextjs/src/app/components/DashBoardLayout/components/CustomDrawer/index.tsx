@@ -296,7 +296,7 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({
                     {...field}
                     checked={field.value}
                     disabled={running}
-                    color="primary"
+                    color="secondary"
                   />
                 }
                 label="Habilitar reprodução"
