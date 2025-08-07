@@ -236,47 +236,49 @@ export function processDeathAndReproduction({
   setNaturalDeathCount: React.Dispatch<React.SetStateAction<number>>;
   setReproductionCount: React.Dispatch<React.SetStateAction<number>>;
 }): Agent[] {
-  const initialInfectedCount = agents.filter(
-    (a) => a.state === "infected"
-  ).length;
+  let virusDeathsVar = 0;
+  let naturalDeathsVar = 0;
 
-  const survivingAgents = agents.filter((agent) => {
+  const survivingAgents: Agent[] = [];
+
+  agents.forEach((agent) => {
+    let survived = true;
+    // Viral death check
     if (
       agent.state === "infected" &&
       Math.random() < viralDeathRate &&
       simulationStep % analysisInterval === 0
     ) {
-      return false;
+      virusDeathsVar++;
+      survived = false;
     }
-    if (Math.random() < deathRate && simulationStep % analysisInterval === 0) {
-      return false;
+    // Natural death check
+    else if (
+      Math.random() < deathRate &&
+      simulationStep % analysisInterval === 0
+    ) {
+      naturalDeathsVar++;
+      survived = false;
     }
-    return true;
+
+    if (survived) {
+      survivingAgents.push(agent);
+    }
   });
 
-  const remainingInfectedCount = survivingAgents.filter(
-    (a) => a.state === "infected"
-  ).length;
-
-  const virusDeaths = initialInfectedCount - remainingInfectedCount;
-  const naturalDeaths = agents.length - survivingAgents.length - virusDeaths;
-
-  if (virusDeaths > 0) {
-    setVirusDeathCount((prev) => prev + virusDeaths);
-  }
-
-  if (naturalDeaths > 0) {
-    setNaturalDeathCount((prev) => prev + naturalDeaths);
-  }
+  if (virusDeathsVar > 0) setVirusDeathCount((prev) => prev + virusDeathsVar);
+  if (naturalDeathsVar > 0)
+    setNaturalDeathCount((prev) => prev + naturalDeathsVar);
 
   if (!enableReproduction) {
     return survivingAgents;
   }
 
-  const numToCreate = enableReproduction
-    ? populationTarget - survivingAgents.length
-    : 0;
+  const numToCreate = populationTarget - survivingAgents.length;
 
+  if (numToCreate <= 0) {
+    return survivingAgents;
+  }
   const children = reproduceAgents({
     parents: survivingAgents,
     numToCreate,
@@ -288,8 +290,8 @@ export function processDeathAndReproduction({
     bornImmunityChance: bornImmuneChance,
   });
 
-  if (numToCreate > 0 && simulationStep % analysisInterval === 0) {
-    setReproductionCount((prev) => prev + numToCreate);
+  if (simulationStep % analysisInterval === 0) {
+    setReproductionCount((prev) => prev + children.length);
   }
 
   return [...survivingAgents, ...children];
