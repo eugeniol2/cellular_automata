@@ -53,6 +53,35 @@ export default function Home() {
 
   const [isDrawerOpen, setIsDrawerOpen] = useAtom(globalAtoms.isDrawerOpen);
 
+  const DEFAULT_FORM_VALUES: SimulationFormValues = {
+    executionTime: 200,
+    caRule: "highlife",
+    initialPop: 100,
+    popTarget: 200,
+    contagionRange: 3,
+    infectionDuration: 25,
+    naturalDeathRate: 0.1,
+    virusDeathRate: 10,
+    bornImmuneChance: 20,
+    enableReproduction: true,
+  };
+
+  const DEFAULT_SIMULATION_PARAMS: UseSimulationProps = {
+    numRows: 50,
+    numCols: 80,
+    initialAgentCount: 100,
+    caRuleStepFn: caRules.highlife.stepFn,
+    deathRate: 0.1 / 100,
+    viralDeathRate: 10 / 100,
+    bornImmuneChance: 20 / 100,
+    populationTarget: 200,
+    infectionDuration: 25,
+    infectionContagiousRange: 3,
+    enableReproduction: true,
+    clock: 200,
+    analysisInterval: 2,
+  };
+
   const [simulationParams, setSimulationParams] = useState<UseSimulationProps>({
     numRows: 50,
     numCols: 80,
@@ -69,22 +98,23 @@ export default function Home() {
     analysisInterval: 2,
   });
 
-  const { control, handleSubmit, formState } = useForm<SimulationFormValues>({
-    resolver: yupResolver(simulationFormSchema),
-    defaultValues: {
-      executionTime: simulationParams.clock,
-      caRule: "highlife" as CaRuleType,
-      initialPop: simulationParams.initialAgentCount,
-      popTarget: simulationParams.populationTarget,
-      contagionRange: simulationParams.infectionContagiousRange,
-      infectionDuration: simulationParams.infectionDuration,
-      naturalDeathRate: simulationParams.deathRate * 100,
-      virusDeathRate: simulationParams.viralDeathRate * 100,
-      bornImmuneChance: simulationParams.bornImmuneChance * 100,
-      enableReproduction: simulationParams.enableReproduction,
-    },
-    mode: "onChange",
-  });
+  const { control, handleSubmit, formState, reset } =
+    useForm<SimulationFormValues>({
+      resolver: yupResolver(simulationFormSchema),
+      defaultValues: {
+        executionTime: simulationParams.clock,
+        caRule: "highlife" as CaRuleType,
+        initialPop: simulationParams.initialAgentCount,
+        popTarget: simulationParams.populationTarget,
+        contagionRange: simulationParams.infectionContagiousRange,
+        infectionDuration: simulationParams.infectionDuration,
+        naturalDeathRate: simulationParams.deathRate * 100,
+        virusDeathRate: simulationParams.viralDeathRate * 100,
+        bornImmuneChance: simulationParams.bornImmuneChance * 100,
+        enableReproduction: simulationParams.enableReproduction,
+      },
+      mode: "onChange",
+    });
 
   const {
     grid,
@@ -122,6 +152,18 @@ export default function Home() {
 
     resetSimulation();
     start();
+  };
+
+  const resetToDefaults = () => {
+    if (running) stop();
+
+    setSimulationParams(DEFAULT_SIMULATION_PARAMS);
+    reset({
+      ...DEFAULT_FORM_VALUES,
+      // react-hook-form needs to track all fields
+      contagionRange: 3, // Fix typo from your form (contagion vs contagion)
+    });
+    resetSimulation();
   };
 
   const handleDrawerToggle = () => {
@@ -271,6 +313,7 @@ export default function Home() {
         drawerWidth={600}
         running={running}
         formState={formState}
+        resetToDefaults={resetToDefaults}
       />
     </Container>
   );

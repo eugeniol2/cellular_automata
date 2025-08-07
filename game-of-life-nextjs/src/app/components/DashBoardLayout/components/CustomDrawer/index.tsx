@@ -2,6 +2,7 @@ import React from "react";
 
 import {
   Box,
+  Button,
   Checkbox,
   Drawer,
   FormControl,
@@ -14,7 +15,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { ChevronLeft } from "@mui/icons-material";
+import { ChevronLeft, Replay } from "@mui/icons-material";
 import { caRuleOptions } from "@/app/utils/caRules";
 import { Control, Controller, FormState } from "react-hook-form";
 import { SimulationFormValues } from "@/app/page";
@@ -26,6 +27,7 @@ interface CustomDrawerProps {
   running: boolean;
   control: Control<SimulationFormValues, SimulationFormValues>;
   formState: FormState<SimulationFormValues>;
+  resetToDefaults: () => void;
 }
 
 export const CustomDrawer: React.FC<CustomDrawerProps> = ({
@@ -34,6 +36,7 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({
   drawerWidth,
   running,
   control,
+  resetToDefaults,
   formState: { errors },
 }) => {
   return (
@@ -182,8 +185,8 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({
                 type="number"
                 fullWidth
                 disabled={running}
-                error={!!errors.popTarget}
-                helperText={errors.popTarget?.message}
+                error={!!errors.contagionRange}
+                helperText={errors.contagionRange?.message}
                 size="small"
                 sx={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
               />
@@ -200,8 +203,8 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({
                 type="number"
                 fullWidth
                 disabled={running}
-                error={!!errors.popTarget}
-                helperText={errors.popTarget?.message}
+                error={!!errors.infectionDuration}
+                helperText={errors.infectionDuration?.message}
                 size="small"
                 sx={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
               />
@@ -219,8 +222,8 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({
                 label="Ritmo de morte natural (%)"
                 type="number"
                 disabled={running}
-                error={!!errors.popTarget}
-                helperText={errors.popTarget?.message}
+                error={!!errors.naturalDeathRate}
+                helperText={errors.naturalDeathRate?.message}
                 slotProps={{
                   input: {
                     endAdornment: (
@@ -271,8 +274,8 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({
                 label="Chance de nascer imune (%)"
                 type="number"
                 disabled={running}
-                error={!!errors.virusDeathRate}
-                helperText={errors.virusDeathRate?.message}
+                error={!!errors.bornImmuneChance}
+                helperText={errors.bornImmuneChance?.message}
                 slotProps={{
                   input: {
                     endAdornment: (
@@ -304,6 +307,16 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({
               />
             )}
           />
+          <Button
+            variant="outlined"
+            color="secondary"
+            startIcon={<Replay />}
+            onClick={resetToDefaults}
+            disabled={running}
+            fullWidth
+          >
+            Resetar valores padrões
+          </Button>
         </Box>
       </Box>
     </Drawer>
