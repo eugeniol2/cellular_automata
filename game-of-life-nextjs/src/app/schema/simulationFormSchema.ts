@@ -5,45 +5,54 @@ import { CaRuleType } from "../page";
 export const simulationFormSchema = yup.object().shape({
   executionTime: yup
     .number()
-    .required("Execution time is required")
-    .min(200, "Minimum execution time is 200ms")
-    .max(1000, "Maximum execution time is 1000ms"),
-  caRule: yup.mixed<CaRuleType>().required("CA Rule is required"),
+    .required("Tempo de execução é obrigatório")
+    .min(200, "Tempo mínimo de execução é 200ms")
+    .max(1000, "Tempo máximo de execução é 1000ms"),
+
+  caRule: yup.mixed<CaRuleType>().required("Regra CA é obrigatória"),
+
   initialPop: yup
     .number()
-    .required("Initial population is required")
-    .min(100, "Minimum initial population is 100")
-    .max(400, "Maximum initial population is 400"),
+    .required("População inicial é obrigatória")
+    .min(100, "População inicial mínima é 100")
+    .max(400, "População inicial máxima é 400"),
+
   popTarget: yup
     .number()
-    .required("Population target is required")
-    .min(100, "Minimum population target is 100")
-    .max(400, "Maximum population target is 400"),
+    .required("Meta de população é obrigatória")
+    .min(100, "Meta de população mínima é 100")
+    .max(400, "Meta de população máxima é 400"),
+
   contagionRange: yup
     .number()
-    .required("Contagion range is required")
-    .min(1, "Minimum contagion range is 1")
-    .max(100, "Maximum contagion range is 100"),
+    .required("Alcance de contágio é obrigatório")
+    .min(1, "Alcance de contágio mínimo é 1")
+    .max(100, "Alcance de contágio máximo é 100"),
+
   infectionDuration: yup
     .number()
-    .required("Infection duration is required")
-    .min(1, "Minimum infection duration is 1"),
+    .required("Duração da infecção é obrigatória")
+    .min(1, "Duração mínima da infecção é 1"),
+
   naturalDeathRate: yup
     .number()
-    .required("Natural death rate is required")
-    .min(0.1, "Minimum natural death rate is 0.1%")
-    .max(100, "Maximum natural death rate is 100%"),
+    .required("Taxa de morte natural é obrigatória")
+    .min(0.1, "Taxa mínima de morte natural é 0.1%")
+    .max(100, "Taxa máxima de morte natural é 100%"),
+
   virusDeathRate: yup
     .number()
-    .required("Virus death rate is required")
-    .min(0.1, "Minimum virus death rate is 0.1%")
-    .max(100, "Maximum virus death rate is 100%"),
+    .required("Letalidade do vírus é obrigatória")
+    .min(0.1, "Letalidade mínima do vírus é 0.1%")
+    .max(100, "Letalidade máxima do vírus é 100%"),
+
   bornImmuneChance: yup
     .number()
-    .required("Born immune chance is required")
-    .min(0.1, "Minimum born immune chance is 0.1%")
-    .max(100, "Maximum born immune chance is 100%"),
+    .required("Chance de imunidade ao nascer é obrigatória")
+    .min(0.1, "Chance mínima de imunidade ao nascer é 0.1%")
+    .max(100, "Chance máxima de imunidade ao nascer é 100%"),
+
   enableReproduction: yup
     .boolean()
-    .required("Reproduction setting is required"),
+    .required("Configuração de reprodução é obrigatória"),
 });

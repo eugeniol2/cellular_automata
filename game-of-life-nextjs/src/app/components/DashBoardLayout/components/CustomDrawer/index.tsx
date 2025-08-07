@@ -16,17 +16,16 @@ import {
 } from "@mui/material";
 import { ChevronLeft } from "@mui/icons-material";
 import { caRuleOptions } from "@/app/utils/caRules";
-import { Control, Controller } from "react-hook-form";
+import { Control, Controller, FormState } from "react-hook-form";
 import { SimulationFormValues } from "@/app/page";
 
 interface CustomDrawerProps {
   drawerToggleFunction: () => void;
   isOpen: boolean;
   drawerWidth: string | number;
-
   running: boolean;
-
   control: Control<SimulationFormValues, SimulationFormValues>;
+  formState: FormState<SimulationFormValues>;
 }
 
 export const CustomDrawer: React.FC<CustomDrawerProps> = ({
@@ -35,6 +34,7 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({
   drawerWidth,
   running,
   control,
+  formState: { errors },
 }) => {
   return (
     <Drawer
@@ -74,9 +74,8 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({
         flex={1}
         display="flex"
         flexDirection="column"
-        justifyContent="space-between"
-        gap="16px"
-        sx={{ p: 2, my: "32px", color: "white" }}
+        justifyContent="space-around"
+        sx={{ p: 2, my: "64px", color: "white" }}
       >
         <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
           <Controller
@@ -85,13 +84,17 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({
             render={({ field }) => (
               <TextField
                 {...field}
-                label="Execution time (ms)"
+                label="Tempo entre passos em ms (Clock) "
                 type="number"
                 disabled={running}
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">ms</InputAdornment>
-                  ),
+                error={!!errors.executionTime}
+                helperText={errors.executionTime?.message}
+                slotProps={{
+                  input: {
+                    endAdornment: (
+                      <InputAdornment position="end">ms</InputAdornment>
+                    ),
+                  },
                 }}
                 fullWidth
                 size="small"
@@ -106,18 +109,25 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({
               name="caRule"
               control={control}
               render={({ field }) => (
-                <Select
-                  {...field}
-                  disabled={running}
-                  label="CA Rule"
-                  sx={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
-                >
-                  {caRuleOptions.map((rule) => (
-                    <MenuItem key={rule.id} value={rule.id}>
-                      {rule.name}
-                    </MenuItem>
-                  ))}
-                </Select>
+                <>
+                  <Select
+                    {...field}
+                    disabled={running}
+                    label="CA Rule (Representa os obstaculos entre um indivíduo e outro)"
+                    sx={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
+                  >
+                    {caRuleOptions.map((rule) => (
+                      <MenuItem key={rule.id} value={rule.id}>
+                        {rule.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                  {errors.caRule && (
+                    <Typography variant="caption" color="error">
+                      {errors.caRule.message}
+                    </Typography>
+                  )}
+                </>
               )}
             />
           </FormControl>
@@ -130,10 +140,12 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({
             render={({ field }) => (
               <TextField
                 {...field}
-                label="Initial Population"
+                label="População inicial"
                 type="number"
                 fullWidth
                 disabled={running}
+                error={!!errors.initialPop}
+                helperText={errors.initialPop?.message}
                 size="small"
                 sx={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
               />
@@ -145,10 +157,12 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({
             render={({ field }) => (
               <TextField
                 {...field}
-                label="Population Target"
+                label="População alvo (Reproduz até x)"
                 type="number"
                 fullWidth
                 disabled={running}
+                error={!!errors.popTarget}
+                helperText={errors.popTarget?.message}
                 size="small"
                 sx={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
               />
@@ -164,10 +178,12 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({
               <TextField
                 {...field}
                 onChange={(e) => field.onChange(Number(e.target.value))}
-                label="Contagion Distance"
+                label="Distância da contaminação (em células)"
                 type="number"
                 fullWidth
                 disabled={running}
+                error={!!errors.popTarget}
+                helperText={errors.popTarget?.message}
                 size="small"
                 sx={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
               />
@@ -180,10 +196,12 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({
             render={({ field }) => (
               <TextField
                 {...field}
-                label="Infection Duration"
+                label="Duração da infeção (em passos)"
                 type="number"
                 fullWidth
                 disabled={running}
+                error={!!errors.popTarget}
+                helperText={errors.popTarget?.message}
                 size="small"
                 sx={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
               />
@@ -198,9 +216,11 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({
             render={({ field }) => (
               <TextField
                 {...field}
-                label="Natural Death Rate (%)"
+                label="Ritmo de morte natural (%)"
                 type="number"
                 disabled={running}
+                error={!!errors.popTarget}
+                helperText={errors.popTarget?.message}
                 slotProps={{
                   input: {
                     endAdornment: (
@@ -221,9 +241,11 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({
             render={({ field }) => (
               <TextField
                 {...field}
-                label="Virus Lethality (%)"
+                label="Letalidade do vírus (%)"
                 type="number"
                 disabled={running}
+                error={!!errors.virusDeathRate}
+                helperText={errors.virusDeathRate?.message}
                 slotProps={{
                   input: {
                     endAdornment: (
@@ -246,9 +268,11 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({
             render={({ field }) => (
               <TextField
                 {...field}
-                label="Born Immune Chance (%)"
+                label="Chance de nascer imune (%)"
                 type="number"
                 disabled={running}
+                error={!!errors.virusDeathRate}
+                helperText={errors.virusDeathRate?.message}
                 slotProps={{
                   input: {
                     endAdornment: (
@@ -270,12 +294,12 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({
                 control={
                   <Checkbox
                     {...field}
-                    name="enableReproductionCheckBox"
+                    checked={field.value}
                     disabled={running}
                     color="primary"
                   />
                 }
-                label="Enable Reproduction"
+                label="Habilitar reprodução"
                 sx={{ mt: 2, color: "white" }}
               />
             )}

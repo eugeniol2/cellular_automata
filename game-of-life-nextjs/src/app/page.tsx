@@ -69,7 +69,7 @@ export default function Home() {
     analysisInterval: 2,
   });
 
-  const { control, handleSubmit, watch } = useForm<SimulationFormValues>({
+  const { control, handleSubmit, formState } = useForm<SimulationFormValues>({
     resolver: yupResolver(simulationFormSchema),
     defaultValues: {
       executionTime: simulationParams.clock,
@@ -101,6 +101,7 @@ export default function Home() {
   });
 
   const onSubmit = (data: SimulationFormValues) => {
+    console.log(data);
     if (running) {
       stop();
     }
@@ -265,6 +266,7 @@ export default function Home() {
         isOpen={isDrawerOpen}
         drawerWidth={600}
         running={running}
+        formState={formState}
       />
     </Container>
   );
