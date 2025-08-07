@@ -62,7 +62,7 @@ export default function Home() {
     viralDeathRate: 10 / 100,
     bornImmuneChance: 20 / 100,
     populationTarget: 200,
-    infectionDuration: 50,
+    infectionDuration: 25,
     infectionContagiousRange: 3,
     enableReproduction: true,
     clock: 200,

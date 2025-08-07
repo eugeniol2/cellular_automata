@@ -1,5 +1,8 @@
 "use client";
 
+import GitHubIcon from "@mui/icons-material/GitHub";
+import LinkedInIcon from "@mui/icons-material/LinkedIn";
+import DescriptionIcon from "@mui/icons-material/Description";
 import KeyboardDoubleArrowRightIcon from "@mui/icons-material/KeyboardDoubleArrowRight";
 import MenuIcon from "@mui/icons-material/Menu";
 import {
@@ -84,12 +87,37 @@ export default function DashboardLayout({
               component="div"
               sx={{ flexGrow: 1, fontWeight: 700 }}
             >
-              NASA Explorer
+              Eugênio Araújo
             </Typography>
-            <Box sx={{ display: { xs: "none", md: "flex" }, gap: 2 }}>
-              <Button color="inherit">API Keys</Button>
-              <Button color="inherit">Support</Button>
-              <Button color="inherit">Documentation</Button>
+            <Box sx={{ display: { xs: "none", md: "flex" }, gap: 3 }}>
+              <IconButton
+                size="large"
+                color="inherit"
+                href="https://github.com/your-username"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <GitHubIcon />
+              </IconButton>
+              <IconButton
+                size="large"
+                color="inherit"
+                href="https://www.linkedin.com/in/your-profile"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <LinkedInIcon />
+              </IconButton>
+              <Button
+                color="inherit"
+                startIcon={<DescriptionIcon />}
+                component="a"
+                href="/path/to/your/documentation.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Artigo do projeto
+              </Button>
             </Box>
           </Toolbar>
         </AppBar>
