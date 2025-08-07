@@ -112,8 +112,8 @@ export default function DashboardLayout({
                 color="inherit"
                 startIcon={<DescriptionIcon />}
                 component="a"
-                href="src/app/assets/A Hybrid Agent-Based and Cellular Automata Model for Simulating Epidemic Dynamics and Spatial Complexity.pdf"
-                download="Artigo-Projeto-Epidemiologia.pdf"
+                href="/assets/article.pdf"
+                download="A Hybrid Agent-Based and Cellular Automata Model for Simulating Epidemic Dynamics and Spatial Complexity.pdf"
                 target="_blank"
                 rel="noopener noreferrer"
               >
