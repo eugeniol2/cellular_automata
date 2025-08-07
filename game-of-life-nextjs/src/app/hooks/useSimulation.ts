@@ -18,7 +18,7 @@ export type CARuleStepFn = (
   numCols: number
 ) => CA_Grid;
 
-type UseSimulationProps = {
+export type UseSimulationProps = {
   numRows: number;
   numCols: number;
   initialAgentCount: number;

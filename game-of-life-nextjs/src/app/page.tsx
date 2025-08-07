@@ -1,8 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 
-import { useSimulation } from "./hooks/useSimulation";
+import { useSimulation, UseSimulationProps } from "./hooks/useSimulation";
 import {
   briansBrainStep,
   dayAndNightStep,
@@ -20,28 +20,22 @@ import { Box, Button, Container, Typography } from "@mui/material";
 import { CustomDrawer } from "./components/DashBoardLayout/components/CustomDrawer";
 import theme from "./theme/theme";
 import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { simulationFormSchema } from "./schema/simulationFormSchema";
 
 const caRules = {
-  highlife: {
-    stepFn: highLifeStep,
-  },
-  dayandnight: {
-    stepFn: dayAndNightStep,
-  },
-  seeds: {
-    stepFn: seedsStep,
-  },
-  serviettes: {
-    stepFn: serviettesStep,
-  },
-  briansbrain: {
-    stepFn: briansBrainStep,
-  },
-};
+  highlife: { stepFn: highLifeStep },
+  dayandnight: { stepFn: dayAndNightStep },
+  seeds: { stepFn: seedsStep },
+  serviettes: { stepFn: serviettesStep },
+  briansbrain: { stepFn: briansBrainStep },
+} as const;
+
+export type CaRuleType = keyof typeof caRules;
 
 export interface SimulationFormValues {
   executionTime: number;
-  caRule: keyof typeof caRules;
+  caRule: CaRuleType;
   initialPop: number;
   popTarget: number;
   contagionRange: number;
@@ -50,8 +44,6 @@ export interface SimulationFormValues {
   virusDeathRate: number;
   bornImmuneChance: number;
   enableReproduction: boolean;
-  enableCA: boolean;
-  enableAgents: boolean;
 }
 
 export default function Home() {
@@ -61,41 +53,38 @@ export default function Home() {
 
   const [isDrawerOpen, setIsDrawerOpen] = useAtom(globalAtoms.isDrawerOpen);
 
-  const numRows = 50;
-  const numCols = 80;
+  const [simulationParams, setSimulationParams] = useState<UseSimulationProps>({
+    numRows: 50,
+    numCols: 80,
+    initialAgentCount: 100,
+    caRuleStepFn: caRules.highlife.stepFn,
+    deathRate: 0.1 / 100,
+    viralDeathRate: 10 / 100,
+    bornImmuneChance: 20 / 100,
+    populationTarget: 200,
+    infectionDuration: 50,
+    infectionContagiousRange: 3,
+    enableReproduction: true,
+    clock: 200,
+    analysisInterval: 2,
+  });
 
   const { control, handleSubmit, watch } = useForm<SimulationFormValues>({
+    resolver: yupResolver(simulationFormSchema),
     defaultValues: {
-      executionTime: 200,
-      caRule: "highlife",
-      initialPop: 100,
-      popTarget: 200,
-      contagionRange: 3,
-      infectionDuration: 50,
-      naturalDeathRate: 0.1,
-      virusDeathRate: 10,
-      bornImmuneChance: 20,
-      enableReproduction: true,
+      executionTime: simulationParams.clock,
+      caRule: "highlife" as CaRuleType,
+      initialPop: simulationParams.initialAgentCount,
+      popTarget: simulationParams.populationTarget,
+      contagionRange: simulationParams.infectionContagiousRange,
+      infectionDuration: simulationParams.infectionDuration,
+      naturalDeathRate: simulationParams.deathRate * 100,
+      virusDeathRate: simulationParams.viralDeathRate * 100,
+      bornImmuneChance: simulationParams.bornImmuneChance * 100,
+      enableReproduction: simulationParams.enableReproduction,
     },
     mode: "onChange",
   });
-
-  const formValues = watch();
-
-  const {
-    executionTime,
-    caRule,
-    initialPop,
-    popTarget,
-    contagionRange,
-    infectionDuration,
-    naturalDeathRate,
-    virusDeathRate,
-    bornImmuneChance,
-    enableReproduction,
-  } = formValues;
-
-  const selectedRule = caRules[caRule] || caRules.highlife;
 
   const {
     grid,
@@ -108,19 +97,31 @@ export default function Home() {
     avgFitnessHistory,
     dimensionHistory,
   } = useSimulation({
-    numRows,
-    numCols,
-    initialAgentCount: initialPop,
-    caRuleStepFn: selectedRule.stepFn,
-    deathRate: naturalDeathRate / 100,
-    viralDeathRate: virusDeathRate / 100,
-    bornImmuneChance: bornImmuneChance / 100,
-    populationTarget: popTarget,
-    infectionDuration: infectionDuration,
-    infectionContagiousRange: contagionRange,
-    enableReproduction: enableReproduction,
-    clock: executionTime,
+    ...simulationParams,
   });
+
+  const onSubmit = (data: SimulationFormValues) => {
+    if (running) {
+      stop();
+    }
+
+    setSimulationParams((prev) => ({
+      ...prev,
+      initialAgentCount: data.initialPop,
+      caRuleStepFn: caRules[data.caRule].stepFn,
+      deathRate: data.naturalDeathRate / 100,
+      viralDeathRate: data.virusDeathRate / 100,
+      bornImmuneChance: data.bornImmuneChance / 100,
+      populationTarget: data.popTarget,
+      infectionDuration: data.infectionDuration,
+      infectionContagiousRange: data.contagionRange,
+      enableReproduction: data.enableReproduction,
+      clock: data.executionTime,
+    }));
+
+    resetSimulation();
+    start();
+  };
 
   const handleDrawerToggle = () => {
     setIsDrawerOpen(!isDrawerOpen);
@@ -233,13 +234,7 @@ export default function Home() {
           variant="contained"
           color={running ? "error" : "secondary"}
           startIcon={running ? <Stop /> : <PlayArrow />}
-          onClick={
-            running
-              ? stop
-              : handleSubmit((formData) => {
-                  start();
-                })
-          }
+          onClick={running ? stop : handleSubmit(onSubmit)}
           fullWidth
         >
           {running ? "Stop" : "Start"}
@@ -257,7 +252,12 @@ export default function Home() {
       </Box>
 
       <Box sx={{ display: "flex", justifyContent: "center", mb: 4 }}>
-        <Grid grid={grid} numRows={numRows} numCols={numCols} agents={agents} />
+        <Grid
+          grid={grid}
+          numRows={simulationParams.numRows}
+          numCols={simulationParams.numCols}
+          agents={agents}
+        />
       </Box>
       <CustomDrawer
         control={control}
