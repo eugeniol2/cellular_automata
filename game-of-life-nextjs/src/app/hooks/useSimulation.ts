@@ -239,6 +239,6 @@ export const useSimulation = ({
     avgFitnessHistory,
     start,
     stop,
-    reset,
+    resetSimulation: reset,
   };
 };

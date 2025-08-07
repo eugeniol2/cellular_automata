@@ -243,7 +243,6 @@ export function processDeathAndReproduction({
 
   agents.forEach((agent) => {
     let survived = true;
-    // Viral death check
     if (
       agent.state === "infected" &&
       Math.random() < viralDeathRate &&
@@ -251,9 +250,7 @@ export function processDeathAndReproduction({
     ) {
       virusDeathsVar++;
       survived = false;
-    }
-    // Natural death check
-    else if (
+    } else if (
       Math.random() < deathRate &&
       simulationStep % analysisInterval === 0
     ) {

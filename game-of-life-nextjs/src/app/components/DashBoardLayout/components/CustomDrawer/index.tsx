@@ -2,7 +2,6 @@ import React from "react";
 
 import {
   Box,
-  Button,
   Checkbox,
   Drawer,
   FormControl,
@@ -14,83 +13,28 @@ import {
   Select,
   TextField,
   Typography,
-  SelectChangeEvent,
 } from "@mui/material";
-import { ChevronLeft, PlayArrow, Stop, Replay } from "@mui/icons-material";
+import { ChevronLeft } from "@mui/icons-material";
 import { caRuleOptions } from "@/app/utils/caRules";
+import { Control, Controller } from "react-hook-form";
+import { SimulationFormValues } from "@/app/page";
 
 interface CustomDrawerProps {
   drawerToggleFunction: () => void;
   isOpen: boolean;
   drawerWidth: string | number;
-  executionSpeed: number;
-  handleExecutionTimeChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  selectedRuleId: string;
-  handleRuleChange: (event: SelectChangeEvent) => void;
-  agentCount: number;
-  handleAgentCountChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  populationTarget: number;
-  handlePopulationTargetChange: (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => void;
-  numRows: number;
-  handleRowsChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  numCols: number;
-  handleColsChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  infectionContagiousRange: number;
-  handleInfectionRangeChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  infectionDuration: number;
-  handleInfectionDurationChange: (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => void;
-  deathRate: number;
-  handleDeathRateChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  viralDeathRate: number;
-  handleViralDeathRateChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  bornImmuneChance: number;
-  handleImmuneBornChanceChange: (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => void;
+
   running: boolean;
-  start: () => void;
-  stop: () => void;
-  reset: () => void;
-  enableReproduction: boolean;
-  setEnableReproduction: React.Dispatch<React.SetStateAction<boolean>>;
+
+  control: Control<SimulationFormValues, SimulationFormValues>;
 }
 
 export const CustomDrawer: React.FC<CustomDrawerProps> = ({
   drawerToggleFunction,
   isOpen,
   drawerWidth,
-  executionSpeed,
-  handleExecutionTimeChange,
-  selectedRuleId,
-  handleRuleChange,
-  agentCount,
-  handleAgentCountChange,
-  populationTarget,
-  handlePopulationTargetChange,
-  numRows,
-  handleRowsChange,
-  numCols,
-  handleColsChange,
-  infectionContagiousRange,
-  handleInfectionRangeChange,
-  infectionDuration,
-  handleInfectionDurationChange,
-  deathRate,
-  handleDeathRateChange,
-  viralDeathRate,
-  handleViralDeathRateChange,
-  bornImmuneChance,
-  handleImmuneBornChanceChange,
   running,
-  start,
-  stop,
-  reset,
-  enableReproduction,
-  setEnableReproduction,
+  control,
 }) => {
   return (
     <Drawer
@@ -135,197 +79,207 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({
         sx={{ p: 2, my: "32px", color: "white" }}
       >
         <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
-          <TextField
-            label="Execution time (ms)"
-            type="number"
-            value={executionSpeed}
-            onChange={handleExecutionTimeChange}
-            disabled={running}
-            InputProps={{
-              endAdornment: <InputAdornment position="end">ms</InputAdornment>,
-            }}
-            fullWidth
-            size="small"
-            sx={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
+          <Controller
+            name="executionTime"
+            control={control}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                label="Execution time (ms)"
+                type="number"
+                disabled={running}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">ms</InputAdornment>
+                  ),
+                }}
+                fullWidth
+                size="small"
+                sx={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
+              />
+            )}
           />
 
           <FormControl fullWidth size="small">
             <InputLabel sx={{ color: "white" }}>CA Rule</InputLabel>
-            <Select
-              value={selectedRuleId}
-              onChange={handleRuleChange}
-              disabled={running}
-              label="CA Rule"
-              sx={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
-            >
-              {caRuleOptions.map((rule) => (
-                <MenuItem key={rule.id} value={rule.id}>
-                  {rule.name}
-                </MenuItem>
-              ))}
-            </Select>
+            <Controller
+              name="caRule"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  {...field}
+                  disabled={running}
+                  label="CA Rule"
+                  sx={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
+                >
+                  {caRuleOptions.map((rule) => (
+                    <MenuItem key={rule.id} value={rule.id}>
+                      {rule.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              )}
+            />
           </FormControl>
         </Box>
 
         <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
-          <TextField
-            label="Initial Population"
-            type="number"
-            value={agentCount}
-            onChange={handleAgentCountChange}
-            disabled={running}
-            inputProps={{ min: 10, max: 500 }}
-            fullWidth
-            size="small"
-            sx={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
+          <Controller
+            name="initialPop"
+            control={control}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                label="Initial Population"
+                type="number"
+                fullWidth
+                disabled={running}
+                size="small"
+                sx={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
+              />
+            )}
           />
-
-          <TextField
-            label="Population Target"
-            type="number"
-            value={populationTarget}
-            onChange={handlePopulationTargetChange}
-            disabled={running}
-            inputProps={{ min: 10 }}
-            fullWidth
-            size="small"
-            sx={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
-          />
-        </Box>
-
-        <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
-          <TextField
-            label="Rows"
-            type="number"
-            value={numRows}
-            onChange={handleRowsChange}
-            disabled={running}
-            inputProps={{ min: 10, max: 100 }}
-            fullWidth
-            size="small"
-            sx={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
-          />
-
-          <TextField
-            label="Columns"
-            type="number"
-            value={numCols}
-            onChange={handleColsChange}
-            disabled={running}
-            inputProps={{ min: 10, max: 100 }}
-            fullWidth
-            size="small"
-            sx={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
+          <Controller
+            name="popTarget"
+            control={control}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                label="Population Target"
+                type="number"
+                fullWidth
+                disabled={running}
+                size="small"
+                sx={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
+              />
+            )}
           />
         </Box>
 
         <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
-          <TextField
-            label="Contagion Distance"
-            type="number"
-            value={infectionContagiousRange}
-            onChange={handleInfectionRangeChange}
-            disabled={running}
-            inputProps={{ min: 1, max: 10 }}
-            fullWidth
-            size="small"
-            sx={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
+          <Controller
+            name="contagionRange"
+            control={control}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                onChange={(e) => field.onChange(Number(e.target.value))}
+                label="Contagion Distance"
+                type="number"
+                fullWidth
+                disabled={running}
+                size="small"
+                sx={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
+              />
+            )}
           />
 
-          <TextField
-            label="Infection Duration"
-            type="number"
-            value={infectionDuration}
-            onChange={handleInfectionDurationChange}
-            disabled={running}
-            inputProps={{ min: 1 }}
-            fullWidth
-            size="small"
-            sx={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
+          <Controller
+            name="infectionDuration"
+            control={control}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                label="Infection Duration"
+                type="number"
+                fullWidth
+                disabled={running}
+                size="small"
+                sx={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
+              />
+            )}
           />
         </Box>
 
         <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
-          <TextField
-            label="Natural Death Rate (%)"
-            type="number"
-            value={deathRate * 100}
-            onChange={handleDeathRateChange}
-            disabled={running}
-            inputProps={{ min: 0, max: 100, step: 0.01 }}
-            InputProps={{
-              endAdornment: <InputAdornment position="end">%</InputAdornment>,
-            }}
-            fullWidth
-            size="small"
-            sx={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
+          <Controller
+            name="naturalDeathRate"
+            control={control}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                label="Natural Death Rate (%)"
+                type="number"
+                disabled={running}
+                slotProps={{
+                  input: {
+                    endAdornment: (
+                      <InputAdornment position="end">%</InputAdornment>
+                    ),
+                  },
+                }}
+                fullWidth
+                size="small"
+                sx={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
+              />
+            )}
           />
 
-          <TextField
-            label="Virus Lethality (%)"
-            type="number"
-            value={Math.round(viralDeathRate * 100)}
-            onChange={handleViralDeathRateChange}
-            disabled={running}
-            inputProps={{ min: 0, max: 100 }}
-            InputProps={{
-              endAdornment: <InputAdornment position="end">%</InputAdornment>,
-            }}
-            fullWidth
-            size="small"
-            sx={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
+          <Controller
+            name="virusDeathRate"
+            control={control}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                label="Virus Lethality (%)"
+                type="number"
+                disabled={running}
+                slotProps={{
+                  input: {
+                    endAdornment: (
+                      <InputAdornment position="end">%</InputAdornment>
+                    ),
+                  },
+                }}
+                fullWidth
+                size="small"
+                sx={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
+              />
+            )}
           />
         </Box>
 
         <Box sx={{ display: "grid", gridTemplateColumns: "1fr", gap: 2 }}>
-          <TextField
-            label="Born Immune Chance (%)"
-            type="number"
-            value={Math.round(bornImmuneChance * 100)}
-            onChange={handleImmuneBornChanceChange}
-            disabled={running}
-            inputProps={{ min: 0, max: 100 }}
-            InputProps={{
-              endAdornment: <InputAdornment position="end">%</InputAdornment>,
-            }}
-            fullWidth
-            size="small"
-            sx={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
-          />
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={enableReproduction}
-                onChange={(e) => setEnableReproduction(e.target.checked)}
+          <Controller
+            name="bornImmuneChance"
+            control={control}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                label="Born Immune Chance (%)"
+                type="number"
                 disabled={running}
-                color="primary"
+                slotProps={{
+                  input: {
+                    endAdornment: (
+                      <InputAdornment position="end">%</InputAdornment>
+                    ),
+                  },
+                }}
+                fullWidth
+                size="small"
+                sx={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
               />
-            }
-            label="Enable Reproduction"
-            sx={{ mt: 2, color: "white" }}
+            )}
           />
-        </Box>
-
-        <Box sx={{ display: "flex", gap: 2 }}>
-          <Button
-            variant="contained"
-            color={running ? "error" : "secondary"}
-            startIcon={running ? <Stop /> : <PlayArrow />}
-            onClick={running ? stop : start}
-            fullWidth
-          >
-            {running ? "Stop" : "Start"}
-          </Button>
-          <Button
-            variant="outlined"
-            color="inherit"
-            startIcon={<Replay />}
-            onClick={reset}
-            disabled={running}
-            fullWidth
-          >
-            Reset
-          </Button>
+          <Controller
+            name="enableReproduction"
+            control={control}
+            render={({ field }) => (
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    {...field}
+                    name="enableReproductionCheckBox"
+                    disabled={running}
+                    color="primary"
+                  />
+                }
+                label="Enable Reproduction"
+                sx={{ mt: 2, color: "white" }}
+              />
+            )}
+          />
         </Box>
       </Box>
     </Drawer>

@@ -1,41 +1,101 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 
 import { useSimulation } from "./hooks/useSimulation";
-import { caRuleOptions } from "./utils/caRules";
+import {
+  briansBrainStep,
+  dayAndNightStep,
+  highLifeStep,
+  seedsStep,
+  serviettesStep,
+} from "./utils/caRules";
 import { globalAtoms } from "./atoms";
 import { useAtom } from "jotai";
+import { PlayArrow, Stop, Replay } from "@mui/icons-material";
+
 import { InfectionFractalChart } from "./components/chart";
 import Grid from "./components/grid";
-import { Box, Container, SelectChangeEvent, Typography } from "@mui/material";
+import { Box, Button, Container, Typography } from "@mui/material";
 import { CustomDrawer } from "./components/DashBoardLayout/components/CustomDrawer";
 import theme from "./theme/theme";
+import { useForm } from "react-hook-form";
 
-const POPULATION_SIZE = 150;
+const caRules = {
+  highlife: {
+    stepFn: highLifeStep,
+  },
+  dayandnight: {
+    stepFn: dayAndNightStep,
+  },
+  seeds: {
+    stepFn: seedsStep,
+  },
+  serviettes: {
+    stepFn: serviettesStep,
+  },
+  briansbrain: {
+    stepFn: briansBrainStep,
+  },
+};
+
+export interface SimulationFormValues {
+  executionTime: number;
+  caRule: keyof typeof caRules;
+  initialPop: number;
+  popTarget: number;
+  contagionRange: number;
+  infectionDuration: number;
+  naturalDeathRate: number;
+  virusDeathRate: number;
+  bornImmuneChance: number;
+  enableReproduction: boolean;
+  enableCA: boolean;
+  enableAgents: boolean;
+}
 
 export default function Home() {
-  const [numRows, setNumRows] = useState(50);
-  const [numCols, setNumCols] = useState(80);
-  const [agentCount, setAgentCount] = useState(POPULATION_SIZE);
-  const [selectedRuleId, setSelectedRuleId] = useState(caRuleOptions[0].id);
-  const [deathRate, setDeathRate] = useState(0.05);
-  const [viralDeathRate, setViralDeathRate] = useState(0.1);
-  const [infectionContagiousRange, setInfectionContagiousRange] = useState(3);
-  const [populationTarget, setPopulationTarget] = useState(150);
-  const [infectionDuration, setInfectionDuration] = useState(20);
-  const [bornImmuneChance, setBornImmuneChance] = useState(0.3);
-  const [executionSpeed, setExecutionSpeed] = useState(100);
-
   const [virusDeathsAtom] = useAtom(globalAtoms.virusDeathsAtom);
   const [naturalDeathsAtom] = useAtom(globalAtoms.naturalDeathsAtom);
   const [reproductionCountAtom] = useAtom(globalAtoms.reproductionCountAtom);
 
   const [isDrawerOpen, setIsDrawerOpen] = useAtom(globalAtoms.isDrawerOpen);
 
-  const [enableReproduction, setEnableReproduction] = useState(true);
-  const selectedRule =
-    caRuleOptions.find((r) => r.id === selectedRuleId) || caRuleOptions[0];
+  const numRows = 50;
+  const numCols = 80;
+
+  const { control, handleSubmit, watch } = useForm<SimulationFormValues>({
+    defaultValues: {
+      executionTime: 200,
+      caRule: "highlife",
+      initialPop: 100,
+      popTarget: 200,
+      contagionRange: 3,
+      infectionDuration: 50,
+      naturalDeathRate: 0.1,
+      virusDeathRate: 10,
+      bornImmuneChance: 20,
+      enableReproduction: true,
+    },
+    mode: "onChange",
+  });
+
+  const formValues = watch();
+
+  const {
+    executionTime,
+    caRule,
+    initialPop,
+    popTarget,
+    contagionRange,
+    infectionDuration,
+    naturalDeathRate,
+    virusDeathRate,
+    bornImmuneChance,
+    enableReproduction,
+  } = formValues;
+
+  const selectedRule = caRules[caRule] || caRules.highlife;
 
   const {
     grid,
@@ -43,114 +103,27 @@ export default function Home() {
     running,
     start,
     stop,
-    reset,
+    resetSimulation,
     simulationStep,
     avgFitnessHistory,
     dimensionHistory,
   } = useSimulation({
     numRows,
     numCols,
-    initialAgentCount: agentCount,
+    initialAgentCount: initialPop,
     caRuleStepFn: selectedRule.stepFn,
-    deathRate,
-    viralDeathRate,
-    populationTarget,
-    infectionDuration,
-    infectionContagiousRange: infectionContagiousRange,
-    enableReproduction,
-    bornImmuneChance,
-    clock: executionSpeed,
+    deathRate: naturalDeathRate / 100,
+    viralDeathRate: virusDeathRate / 100,
+    bornImmuneChance: bornImmuneChance / 100,
+    populationTarget: popTarget,
+    infectionDuration: infectionDuration,
+    infectionContagiousRange: contagionRange,
+    enableReproduction: enableReproduction,
+    clock: executionTime,
   });
-
-  const clamp = (value: number, min: number, max: number) =>
-    Math.max(min, Math.min(max, value));
 
   const handleDrawerToggle = () => {
     setIsDrawerOpen(!isDrawerOpen);
-  };
-
-  const handleRuleChange = (event: SelectChangeEvent) => {
-    setSelectedRuleId(event.target.value as string);
-  };
-
-  const handleRowsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = Number(e.target.value);
-    value = clamp(value, 10, 100);
-    setNumRows(value);
-    e.target.value = value.toString();
-  };
-
-  const handleColsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = Number(e.target.value);
-    value = clamp(value, 10, 100);
-    setNumCols(value);
-    e.target.value = value.toString();
-  };
-  const handleAgentCountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = Number(e.target.value);
-    value = clamp(value, 10, 500);
-    setAgentCount(value);
-    e.target.value = value.toString();
-  };
-
-  const handleDeathRateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = Number(e.target.value);
-    value = clamp(value, 0, 100);
-    setDeathRate(value / 100);
-    e.target.value = value.toString();
-  };
-
-  const handleViralDeathRateChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    let value = Number(e.target.value);
-    value = clamp(value, 0, 100);
-    setViralDeathRate(value / 100);
-    e.target.value = value.toString();
-  };
-  const handleExecutionTimeChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    let value = Number(e.target.value);
-    value = clamp(value, 1, 1000);
-    setExecutionSpeed(value);
-    e.target.value = value.toString();
-  };
-
-  const handlePopulationTargetChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    let value = Number(e.target.value);
-    value = clamp(value, 10, 1000);
-    setPopulationTarget(value);
-    e.target.value = value.toString();
-  };
-
-  const handleInfectionDurationChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    let value = Number(e.target.value);
-    value = clamp(value, 1, 1000);
-    setInfectionDuration(value);
-    e.target.value = value.toString();
-  };
-
-  const handleImmuneBornChanceChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    let value = Number(e.target.value);
-    value = clamp(value, 0, 100);
-    setBornImmuneChance(value / 100);
-    e.target.value = value.toString();
-  };
-
-  const handleInfectionRangeChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    let value = Number(e.target.value);
-    value = clamp(value, 1, 10);
-    setInfectionContagiousRange(value);
-    e.target.value = value.toString();
   };
 
   const suscetiveisCount = agents.filter(
@@ -255,42 +228,43 @@ export default function Home() {
           </Box>
         </Box>
       </Box>
+      <Box sx={{ display: "flex", gap: 2 }}>
+        <Button
+          variant="contained"
+          color={running ? "error" : "secondary"}
+          startIcon={running ? <Stop /> : <PlayArrow />}
+          onClick={
+            running
+              ? stop
+              : handleSubmit((formData) => {
+                  start();
+                })
+          }
+          fullWidth
+        >
+          {running ? "Stop" : "Start"}
+        </Button>
+        <Button
+          variant="outlined"
+          color="inherit"
+          startIcon={<Replay />}
+          onClick={resetSimulation}
+          disabled={running}
+          fullWidth
+        >
+          Reset
+        </Button>
+      </Box>
 
       <Box sx={{ display: "flex", justifyContent: "center", mb: 4 }}>
         <Grid grid={grid} numRows={numRows} numCols={numCols} agents={agents} />
       </Box>
       <CustomDrawer
+        control={control}
         drawerToggleFunction={handleDrawerToggle}
         isOpen={isDrawerOpen}
         drawerWidth={600}
-        executionSpeed={executionSpeed}
-        handleExecutionTimeChange={handleExecutionTimeChange}
-        selectedRuleId={selectedRuleId}
-        handleRuleChange={handleRuleChange}
-        agentCount={agentCount}
-        handleAgentCountChange={handleAgentCountChange}
-        populationTarget={populationTarget}
-        handlePopulationTargetChange={handlePopulationTargetChange}
-        numRows={numRows}
-        handleRowsChange={handleRowsChange}
-        numCols={numCols}
-        handleColsChange={handleColsChange}
-        infectionContagiousRange={infectionContagiousRange}
-        handleInfectionRangeChange={handleInfectionRangeChange}
-        infectionDuration={infectionDuration}
-        handleInfectionDurationChange={handleInfectionDurationChange}
-        deathRate={deathRate}
-        handleDeathRateChange={handleDeathRateChange}
-        viralDeathRate={viralDeathRate}
-        handleViralDeathRateChange={handleViralDeathRateChange}
-        bornImmuneChance={bornImmuneChance}
-        handleImmuneBornChanceChange={handleImmuneBornChanceChange}
         running={running}
-        start={start}
-        stop={stop}
-        reset={reset}
-        enableReproduction={enableReproduction}
-        setEnableReproduction={setEnableReproduction}
       />
     </Container>
   );
