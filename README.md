@@ -8,6 +8,7 @@ Este trabalho foi desenvolvido como projeto final para as disciplinas de Epidemi
 
 Artigo: [A Hybrid Agent-Based and Cellular Automata Model for Simulating Epidemic Dynamics and Spatial Complexity.pdf](https://github.com/user-attachments/files/21669100/A.Hybrid.Agent-Based.and.Cellular.Automata.Model.for.Simulating.Epidemic.Dynamics.and.Spatial.Complexity.pdf)
 
+Link projeto: https://cellular-automata-smoky.vercel.app/
 ---
 
 ## 📋 Índice
