@@ -62,7 +62,7 @@ export default function Home() {
     infectionDuration: 25,
     naturalDeathRate: 0.1,
     virusDeathRate: 10,
-    bornImmuneChance: 20,
+    bornImmuneChance: 2,
     enableReproduction: true,
   };
 
@@ -73,7 +73,7 @@ export default function Home() {
     caRuleStepFn: caRules.highlife.stepFn,
     deathRate: 0.1 / 100,
     viralDeathRate: 10 / 100,
-    bornImmuneChance: 20 / 100,
+    bornImmuneChance: 2 / 100,
     populationTarget: 200,
     infectionDuration: 25,
     infectionContagiousRange: 3,
@@ -89,7 +89,7 @@ export default function Home() {
     caRuleStepFn: caRules.highlife.stepFn,
     deathRate: 0.1 / 100,
     viralDeathRate: 10 / 100,
-    bornImmuneChance: 20 / 100,
+    bornImmuneChance: 2 / 100,
     populationTarget: 200,
     infectionDuration: 25,
     infectionContagiousRange: 3,
@@ -162,6 +162,10 @@ export default function Home() {
       ...DEFAULT_FORM_VALUES,
       contagionRange: 3,
     });
+    resetSimulation();
+  };
+
+  const resetWithoutChangingConfigs = () => {
     resetSimulation();
   };
 
@@ -298,7 +302,7 @@ export default function Home() {
           variant="outlined"
           color="inherit"
           startIcon={<Replay />}
-          onClick={resetToDefaults}
+          onClick={resetWithoutChangingConfigs}
           disabled={running}
           fullWidth
         >

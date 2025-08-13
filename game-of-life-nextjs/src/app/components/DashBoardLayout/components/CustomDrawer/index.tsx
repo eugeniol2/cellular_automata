@@ -271,7 +271,7 @@ export const CustomDrawer: React.FC<CustomDrawerProps> = ({
             render={({ field }) => (
               <TextField
                 {...field}
-                label="Chance de nascer imune (%)"
+                label="Chance de nascer imune (%) (Pontos amarelos)"
                 type="number"
                 disabled={running}
                 error={!!errors.bornImmuneChance}
